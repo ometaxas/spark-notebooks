@@ -1,0 +1,61 @@
+{
+  "paragraphs": [
+    {
+      "text": "%spark.conf\n\n# It is strongly recommended to set SPARK_HOME explictly instead of using the embedded spark of Zeppelin. As the function of embedded spark of Zeppelin is limited and can only run in local mode.\nSPARK_HOME /home/ometaxas/Projects/spark-3.0.0-bin-hadoop3.2\n\n# set driver memory to 4g\nspark.driver.memory 110g\n\n# set executor memrory 110g\n# spark.executor.memory  60g\n\n\n# set executor number to be 6\n# spark.executor.instances  6\n\n\n# Uncomment the following line if you want to use yarn-cluster mode (It is recommended to use yarn-cluster mode after Zeppelin 0.8, as the driver will run on the remote host of yarn cluster which can mitigate memory pressure of zeppelin server)\n# master yarn-cluster\n\n# Uncomment the following line if you want to use yarn-client mode (It is not recommended to use it after 0.8. Because it would launch the driver in the same host of zeppelin server which will increase memory pressure of zeppelin server)\n# master yarn-client\n\n# Uncomment the following line to enable HiveContext, and also put hive-site.xml under SPARK_CONF_DIR\n# zeppelin.spark.useHiveContext true\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-09-29 14:28:28.587",
+      "config": {},
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601378794782_825314965",
+      "id": "paragraph_1601378794782_825314965",
+      "dateCreated": "2020-09-29 14:26:34.782",
+      "status": "READY"
+    },
+    {
+      "text": "%spark\n\nval DOIs_HOME \u003d \"/home/ometaxas/Datasets/rnd243ikhlas\"\nval articlesdois \u003d \"articles_dois.txt\"\n\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\n\nval logger: Logger \u003d LoggerFactory.getLogger(\"MyZeppelinLogger\");\nlogger.info(\"Test my logger\");\n\n// Read data from csv file. You can customize it via spark.read.options. E.g. In the following example, we customize the sep and header\n// Add . at the end of this line to indidate this is not the end of this line of code.\nval udf1 \u003d udf[String, String]((e:String) \u003d\u003e e.toUpperCase)\nval pmcarticlesdf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).                    \n                    csv(s\"file://$DOIs_HOME/$articlesdois\").select(udf1($\"_c0\").as(\"doi\")).cache()\npmcarticlesdf.printSchema\npmcarticlesdf.show(5)\nval pmccnt \u003d pmcarticlesdf.count()\nprintln(pmccnt)\n\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-09-29 14:40:50.502",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601379634635_1604059679",
+      "id": "paragraph_1601379634635_1604059679",
+      "dateCreated": "2020-09-29 14:40:34.635",
+      "status": "READY"
+    }
+  ],
+  "name": "1stGitTest",
+  "id": "2FK3VWJZD",
+  "defaultInterpreterGroup": "spark",
+  "version": "0.9.0-preview2",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
+  "config": {
+    "isZeppelinNotebookCronEnable": false
+  },
+  "info": {}
+}
