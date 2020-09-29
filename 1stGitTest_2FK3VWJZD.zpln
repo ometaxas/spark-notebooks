@@ -1,0 +1,30 @@
+{
+  "paragraphs": [
+    {
+      "user": "anonymous",
+      "config": {},
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601378794782_825314965",
+      "id": "paragraph_1601378794782_825314965",
+      "dateCreated": "2020-09-29 14:26:34.782",
+      "status": "READY"
+    }
+  ],
+  "name": "1stGitTest",
+  "id": "2FK3VWJZD",
+  "defaultInterpreterGroup": "spark",
+  "version": "0.9.0-preview2",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
+  "config": {
+    "isZeppelinNotebookCronEnable": false
+  },
+  "info": {}
+}
