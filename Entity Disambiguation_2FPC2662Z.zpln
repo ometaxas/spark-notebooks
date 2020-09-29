@@ -1,0 +1,102 @@
+{
+  "paragraphs": [
+    {
+      "text": "%spark.conf\n\n# It is strongly recommended to set SPARK_HOME explictly instead of using the embedded spark of Zeppelin. As the function of embedded spark of Zeppelin is limited and can only run in local mode.\nSPARK_HOME /home/ometaxas/Projects/spark-3.0.0-bin-hadoop3.2\n\n# set driver memory to 4g\nspark.driver.memory 110g\n\n# set executor memrory 110g\n# spark.executor.memory  60g\n\n\n# set executor number to be 6\n# spark.executor.instances  6\n\n\n# Uncomment the following line if you want to use yarn-cluster mode (It is recommended to use yarn-cluster mode after Zeppelin 0.8, as the driver will run on the remote host of yarn cluster which can mitigate memory pressure of zeppelin server)\n# master yarn-cluster\n\n# Uncomment the following line if you want to use yarn-client mode (It is not recommended to use it after 0.8. Because it would launch the driver in the same host of zeppelin server which will increase memory pressure of zeppelin server)\n# master yarn-client\n\n# Uncomment the following line to enable HiveContext, and also put hive-site.xml under SPARK_CONF_DIR\n# zeppelin.spark.useHiveContext true\n\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-09-29 16:00:10.189",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "text",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/text"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601384388268_995029972",
+      "id": "paragraph_1601384388268_995029972",
+      "dateCreated": "2020-09-29 15:59:48.268",
+      "status": "READY"
+    },
+    {
+      "text": "%spark\n\n//Match Semantic Scholar with MAG Authors\n\nval S2_HOME \u003d \"/media/datadisk/Datasets/SemanticScholar\"\nval ACM_HOME \u003d \"/home/ometaxas/Datasets/ACM\"\n//val S2_HOME \u003d \"/home/ometaxas/Datasets/SemanticScholar\"\n\nval S2_articles \u003d \"sample-S2-records.gz\"\n\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n\nval logger: Logger \u003d LoggerFactory.getLogger(\"MyZeppelinLogger\");\nlogger.info(\"Test my logger\");\n\n// Read data from csv file. You can customize it via spark.read.options. E.g. In the following example, we customize the sep and header\n// Add . at the end of this line to indidate this is not the end of this line of code.\n//val udf1 \u003d udf[String, String]((e:String) \u003d\u003e e.toUpperCase)\n\n/*\n//ACM subCorpus\n//Publication DOI, Publication MAG ID, Publication S2 ID, Author Name, Author MAG ID, Author S2 ID\nval ACMmatchedAuthorsSchema \u003d new StructType().\n                add(\"doi\", StringType, false).\n                add(\"pMAG_Id\", LongType, false).                \n                add(\"pS2_Id\", StringType, true).\n                add(\"AuthorName\",StringType, true).\n                add(\"aMAG_Id\", LongType, true).\n                add(\"aS2_Id\", StringType, true)\n\n                \nval ACMmatchedAuthorsdf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(ACMmatchedAuthorsSchema).\n                csv(s\"file://$ACM_HOME/acm.pubs.all.tsv\").cache()\n                \n\nACMmatchedAuthorsdf.show(50)\nprintln(ACMmatchedAuthorsdf.count())\n\nval doisdf \u003d ACMmatchedAuthorsdf.select(\"doi\").distinct()\ndoisdf.show(false)\n\n\nval df2 \u003d ACMmatchedAuthorsdf.select(countDistinct(\"doi\"))\ndf2.show(false)\n\nval df3 \u003d ACMmatchedAuthorsdf.select(countDistinct(\"aMAG_Id\"))\ndf3.show(false)\n\nval df4 \u003d ACMmatchedAuthorsdf.select(countDistinct(\"aS2_Id\"))\ndf4.show(false)\n*/\n\n\nval S2articlesdf \u003d spark.read.json(s\"file://$S2_HOME\")\n//val pmcarticlesdf \u003d spark.read.json(s\"file://$S2_HOME/$articlesdois\").cache()\nS2articlesdf.printSchema\n//pmcarticlesdf.show(5)\n//val pmccnt \u003d pmcarticlesdf.count()\n//println(pmccnt)\n\nval S2subsetdf \u003d S2articlesdf\n             //.join(broadcast(doisdf), pmcarticlesdf(\"doi\")\u003d\u003d\u003ddoisdf(\"doi\"), \"inner\")\n             .filter(($\"magId\" \u003d!\u003d \"\") \u0026\u0026 ($\"magId\".isNotNull))\n             .select($\"id\", $\"doi\", $\"magId\", $\"pmid\", $\"authors\")\n             \n\n\nval S2flatdf \u003d S2subsetdf.select($\"id\", $\"doi\", $\"magId\", $\"pmid\", explode($\"authors\").as(\"authorsflat\"))\n\nval S2_Pub_Authors \u003d S2flatdf.select($\"id\", $\"doi\", $\"magId\", $\"pmid\", $\"authorsflat.name\",concat_ws(\"\",$\"authorsflat.ids\").as(\"authorId\"))\n//flatdfsplit.printSchema\n//flatdfsplit.show(5)\n\n\n//println(\"S2_Author_pubCnt:\" + S2_Pub_Authors.count())\n\n//val doisdfcnt \u003d flatdfsplit.select(countDistinct(\"doi\"))\n//doisdfcnt.show(false)\n\nval MAG_HOME \u003d \"/home/ometaxas/Datasets/mag\"\nval paperAuthorsAffTsvFilename \u003d \"PaperAuthorAffiliations.txt\"\nval authorsAffTsvFilename \u003d \"Authors.txt\"\nval papersTsvFilename \u003d \"Papers.txt\"\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\n//import java.lang.Integer.parseInt\n\n\nval paperAuthorAffSchema \u003d new StructType().\n                add(\"paperId\", LongType, false).\n                add(\"AuthorID\", LongType, false).                \n                add(\"AffiliationId\", LongType, true).\n                add(\"AuthorSequenceNumber\",IntegerType, true).\n                add(\"OriginalAuthor\", StringType, true).\n                add(\"OriginalAffiliation\", StringType, true)\n\n                \nval paperAuthorAffdf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(paperAuthorAffSchema).\n                csv(s\"file://$MAG_HOME/$paperAuthorsAffTsvFilename\")\n                \n                \nval authorSchema \u003d new StructType().\n                add(\"AuthorId\", LongType, false).\n                add(\"Rank\", LongType, true).                \n                add(\"NormalizedName\", StringType, true).\n                add(\"DisplayName\",StringType, true).\n                add(\"LastKnownAffiliationId\", LongType, true).\n                add(\"PaperCount\", LongType, true).\n                add(\"PaperFamilyCount\", LongType, true).\n                add(\"CitationCount\", LongType, true).\n                add(\"CreatedDate\", DateType, true)\n                \n\n                \nval authordf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(authorSchema).\n                csv(s\"file://$MAG_HOME/$authorsAffTsvFilename\")\n\nval paperSchema \u003d new StructType().\n    add(\"paperId\", LongType, false).\n    add(\"magRank\", IntegerType, true).\n    add(\"doi\", StringType, true).\n    add(\"docTypetmp\", StringType, true).\n    add(\"normalizedTitle\", StringType, true).\n    add(\"title\", StringType, false).\n    add(\"bookTitle\", StringType, true).\n    add(\"pubYear\", IntegerType, true).\n    add(\"pubDate\", StringType, true).\n    add(\"onlineDate\", StringType, true).\n    add(\"publisherName\", StringType, true).\n    add(\"journalId\", StringType, true).\n    add(\"conferenceSeriesId\", LongType, true).\n    add(\"conferenceInstancesId\", LongType, true).\n    add(\"volume\", StringType, true).\n    add(\"issue\", StringType, true).\n    add(\"firstPage\", StringType, true).\n    add(\"lastPage\", StringType, true).\n    add(\"referenceCount\", LongType, true).\n    add(\"citationCount\", LongType, true).\n    add(\"estimatedCitation\", LongType, true).\n    add(\"originalVenue\", StringType, true).\n    add(\"familyId\", StringType, true).\n    add(\"createdDate\", DateType, true)\n    \nval papersdf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n              schema(paperSchema).\n             csv(s\"file://$MAG_HOME/$papersTsvFilename\")\n/*\n\nval MAGsubsetdf \u003d papersdf\n             //.join(broadcast(doisdf), pmcarticlesdf(\"doi\")\u003d\u003d\u003ddoisdf(\"doi\"), \"inner\")\n             //.filter(($\"doi\" \u003d!\u003d \"\") \u0026\u0026 ($\"doi\".isNotNull))\n             .select(papersdf(\"paperId\"),papersdf(\"doi\"))\n  */           \n\n\n\nval MAGjoindf \u003d papersdf\n            //.join(broadcast(doisdf), lower(papersdf(\"doi\"))\u003d\u003d\u003dlower(doisdf(\"doi\")), \"inner\")\n              .join(paperAuthorAffdf, paperAuthorAffdf(\"paperId\")\u003d\u003d\u003dpapersdf(\"paperId\"), \"inner\")\n              .join(authordf, paperAuthorAffdf(\"AuthorId\")\u003d\u003d\u003dauthordf(\"AuthorId\"), \"inner\")\n              .select(papersdf(\"paperId\"),papersdf(\"doi\"), authordf(\"normalizedName\") as \"name\", paperAuthorAffdf(\"AuthorId\"))\n             //.write.csv(\"relatedFoS.csv\")\n                //fieldsOfStudydf.dropDuplicates(\"mainType\").select(\"mainType\").show(200)\n\n//println(\"MAG_Author_pubCnt:\"+ACMjoindf.count())\n//ACMjoindf.show(10)      \n\n\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\n\n//org.apache.commons.lang3.StringUtils.stripAccents(input.toLowerCase(Locale.ENGLISH));\n\n\n\nval unaccent2 \u003d udf[String, String]((e:String) \u003d\u003e {\n    \n    val normname \u003d org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    //.replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n    .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n\t\t\t\t.trim().split(\" \")\n    \n\n val shortName \u003d  if (normname.length \u003d\u003d 1) normname(0) else normname(0).take(1) + normname(normname.length-1)\n shortName\n\n    \n})\n\n\n//println(\"MAG_Author_pubCnt:\"+ACMjoindf.count())\n//println(\"S2_Author_pubCnt:\"+flatdfsplit.count())\n\nval S2_MAG_df2 \u003d S2_Pub_Authors\n                   .join(MAGjoindf, S2_Pub_Authors(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\")  \u0026\u0026 unaccent2(S2_Pub_Authors(\"name\"))\u003d\u003d\u003dunaccent2(MAGjoindf(\"name\")), \"inner\")\n\nS2_MAG_df2.show(50)\n\n\n\nprintln(\"Join_S2_Mag_auth_pubCnt:\"+S2_MAG_df2.count())\n\n\n\nval S2_MAG_df3 \u003d S2_Pub_Authors\n                   .join(MAGjoindf, S2_Pub_Authors(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026 unaccent2(S2_Pub_Authors(\"name\"))\u003d\u003d\u003dunaccent2(MAGjoindf(\"name\")), \"leftanti\")\n                   \n\nS2_MAG_df3.show(50)\nprintln(\"NotJoin_S2_auth_pubCnt:\"+S2_MAG_df3.count())\n\n/*\n// Analyze not matched Authors\n\nval ids \u003d Seq(\"697\", \"2595\", \"25650\", \"25968\", \"29103\" ,\"30267\",\"35158\")\n\nval S2_not_Matched \u003d MAGjoindf.filter($\"paperId\".isin(ids:_*))\nS2_not_Matched.show(100)\n//println(\"Join_UDF_pubCnt:\"+ ACM_S2_MAG_df3.count())\n             \n*/\n\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-09-29 16:03:04.182",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601384410282_918152300",
+      "id": "paragraph_1601384410282_918152300",
+      "dateCreated": "2020-09-29 16:00:10.282",
+      "status": "READY"
+    },
+    {
+      "text": "%spark\n//Author Name Normalization tests \n\n\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\n\nval a \u003d 100\nprintln(a)\n\ndef unaccent2(e: String): String \u003d {\n  val normname \u003d org.apache.commons.lang3.StringUtils\n    .stripAccents(e.toLowerCase(Locale.ENGLISH))\n    .replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n    .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n    .trim()\n    .split(\" \")\n\n  val shortName \u003d\n    if (normname.length \u003d\u003d 1) normname(0)\n    else normname(0).take(1) + normname(normname.length - 1)\n  return shortName\n}\n\ndef unaccent3(e: String): String \u003d {\n  val normname \u003d \n  //e\n  org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n     //.replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n    .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n    .trim()\n    .split(\" \")\n\n  val shortName \u003d\n    if (normname.length \u003d\u003d 1) normname(0)\n    else normname(0).take(1) + normname(normname.length - 1)\n  return shortName\n}\n\nprintln(\"chinese:\"+ unaccent2(\"福村 健\"))\n\nprintln(unaccent3(\"omiros K metaxas\"))\n\n\nprintln(unaccent3(\"налиухин алексей\"))\n\nprintln(unaccent3(\" 山下 弘子\"))\n\nprintln(unaccent3(\"淳夫 三輪\"))\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-09-29 16:03:32.830",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601384584554_1638316922",
+      "id": "paragraph_1601384584554_1638316922",
+      "dateCreated": "2020-09-29 16:03:04.554",
+      "status": "READY"
+    }
+  ],
+  "name": "Entity Disambiguation",
+  "id": "2FPC2662Z",
+  "defaultInterpreterGroup": "spark",
+  "version": "0.9.0-preview2",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
+  "config": {
+    "isZeppelinNotebookCronEnable": false
+  },
+  "info": {}
+}
