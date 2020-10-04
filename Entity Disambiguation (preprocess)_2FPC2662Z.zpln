@@ -1,0 +1,1220 @@
+{
+  "paragraphs": [
+    {
+      "text": "%spark.conf\n\n# It is strongly recommended to set SPARK_HOME explictly instead of using the embedded spark of Zeppelin. As the function of embedded spark of Zeppelin is limited and can only run in local mode.\nSPARK_HOME /home/ometaxas/Projects/spark-3.0.0-bin-hadoop3.2\n\n# set driver memory to 4g\nspark.driver.memory 110g\n\nSPARK_LOCAL_DIRS /media/datadisk/Datasets/Spark\n\n# set executor memrory 110g\n# spark.executor.memory  60g\n\n\n# set executor number to be 6\n# spark.executor.instances  6\n\n\n# Uncomment the following line if you want to use yarn-cluster mode (It is recommended to use yarn-cluster mode after Zeppelin 0.8, as the driver will run on the remote host of yarn cluster which can mitigate memory pressure of zeppelin server)\n# master yarn-cluster\n\n# Uncomment the following line if you want to use yarn-client mode (It is not recommended to use it after 0.8. Because it would launch the driver in the same host of zeppelin server which will increase memory pressure of zeppelin server)\n# master yarn-client\n\n# Uncomment the following line to enable HiveContext, and also put hive-site.xml under SPARK_CONF_DIR\n# zeppelin.spark.useHiveContext true\n\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-03 23:59:42.454",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "text",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/text"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601384388268_995029972",
+      "id": "paragraph_1601384388268_995029972",
+      "dateCreated": "2020-09-29 15:59:48.268",
+      "dateStarted": "2020-10-03 23:59:42.475",
+      "dateFinished": "2020-10-03 23:59:42.493",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\n\n// Match Semantic Scholar with MAG Authors \n// Full scale and ACM corpus based analysis\n\nval S2_HOME \u003d \"/media/datadisk/Datasets/SemanticScholar\"\nval ACM_HOME \u003d \"/home/ometaxas/Datasets/ACM\"\n//val S2_HOME \u003d \"/home/ometaxas/Datasets/SemanticScholar/Small\"\n\nval S2_articles \u003d \"sample-S2-records.gz\"\n\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\n//org.apache.commons.lang3.StringUtils.stripAccents(input.toLowerCase(Locale.ENGLISH));\n\n\n\nval unaccent2 \u003d udf[String, String]((e:String) \u003d\u003e {\n    \n    val normname \u003d org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    //.replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n    .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n\t\t\t\t.trim().split(\" \")\n    \n\n val shortName \u003d  if (normname.length \u003d\u003d 1) normname(0) else normname(0).take(1) + normname(normname.length-1)\n shortName\n\n    \n})\n\nval logger: Logger \u003d LoggerFactory.getLogger(\"MyZeppelinLogger\");\nlogger.info(\"Test my logger\");\n\n// Read data from csv file. You can customize it via spark.read.options. E.g. In the following example, we customize the sep and header\n// Add . at the end of this line to indidate this is not the end of this line of code.\n//val udf1 \u003d udf[String, String]((e:String) \u003d\u003e e.toUpperCase)\n\n\n// ACM subCorpus\n//Publication DOI, Publication MAG ID, Publication S2 ID, Author Name, Author MAG ID, Author S2 ID\nval ACMmatchedAuthorsSchema \u003d new StructType().\n                add(\"doi\", StringType, false).\n                add(\"pMAG_Id\", LongType, false).                \n                add(\"pS2_Id\", StringType, true).\n                add(\"AuthorName\",StringType, true).\n                add(\"aMAG_Id\", LongType, true).\n                add(\"aS2_Id\", StringType, true)\n\n                \nval ACMmatchedAuthorsdf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(ACMmatchedAuthorsSchema).\n                csv(s\"file://$ACM_HOME/acm.pubs.all.tsv\")\n                \n\n//ACMmatchedAuthorsdf.show(50)\n//println(ACMmatchedAuthorsdf.count())\n\nval doisdf \u003d ACMmatchedAuthorsdf.select(lower(ACMmatchedAuthorsdf(\"doi\")).as(\"doi\"))\n.distinct()\n//.limit(10000)\n.cache()\n\ndoisdf.show(false)\nprintln(\"DOIs cnt:\" + doisdf.count())\n\n/*\nval df2 \u003d ACMmatchedAuthorsdf.select(countDistinct(\"doi\"))\ndf2.show(false)\n\nval df3 \u003d ACMmatchedAuthorsdf.select(countDistinct(\"aMAG_Id\"))\ndf3.show(false)\n\nval df4 \u003d ACMmatchedAuthorsdf.select(countDistinct(\"aS2_Id\"))\ndf4.show(false)\n*/\n\n//Get Semantic Scholar articles \nval S2articlesdf \u003d spark.read.json(s\"file://$S2_HOME\")\n//S2articlesdf.printSchema\n\nval S2subsetdf \u003d S2articlesdf\n             //.join(broadcast(doisdf), lower(S2articlesdf(\"doi\"))\u003d\u003d\u003ddoisdf(\"doi\"), \"inner\")\n             //.filter(($\"magId\" \u003d!\u003d \"\") \u0026\u0026 ($\"magId\".isNotNull))\n             .select($\"title\", $\"id\",lower(S2articlesdf(\"doi\")).as(\"doi\"), $\"magId\", $\"pmid\", $\"authors\")\n             \n//S2subsetdf.show(10)\n\n//Create pub - author rows\nval S2flatdf \u003d S2subsetdf.select($\"title\", $\"id\", $\"doi\", $\"magId\", $\"pmid\", explode($\"authors\").as(\"authorsflat\"))\n\nval S2_Pub_Authors \u003d S2flatdf.select($\"title\", $\"id\", $\"doi\", $\"magId\", $\"pmid\", $\"authorsflat.name\",concat_ws(\"\",$\"authorsflat.ids\").as(\"authorId\"),unaccent2( $\"authorsflat.name\").as(\"shortNormName\"))\n.persist(StorageLevel.DISK_ONLY)\n//.cache()\n\nS2_Pub_Authors.printSchema\n//flatdfsplit.show(5)\n\nprintln(\"S2_Author_Pub_Cnt:\" + S2_Pub_Authors.count())\nS2_Pub_Authors.write.parquet(\"S2_Pub_Authors.parquet\")\n\n//Get MAG AUthor - Pub pairs\nval MAG_HOME \u003d \"/home/ometaxas/Datasets/mag\"\nval paperAuthorsAffTsvFilename \u003d \"PaperAuthorAffiliations.txt\"\nval authorsAffTsvFilename \u003d \"Authors.txt\"\nval papersTsvFilename \u003d \"Papers.txt\"\n\n\nval paperAuthorAffSchema \u003d new StructType().\n                add(\"paperId\", LongType, false).\n                add(\"AuthorID\", LongType, false).                \n                add(\"AffiliationId\", LongType, true).\n                add(\"AuthorSequenceNumber\",IntegerType, true).\n                add(\"OriginalAuthor\", StringType, true).\n                add(\"OriginalAffiliation\", StringType, true)\n\n                \nval paperAuthorAffdf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(paperAuthorAffSchema).\n                csv(s\"file://$MAG_HOME/$paperAuthorsAffTsvFilename\")\n                \n                \nval authorSchema \u003d new StructType().\n                add(\"AuthorId\", LongType, false).\n                add(\"Rank\", LongType, true).                \n                add(\"NormalizedName\", StringType, true).\n                add(\"DisplayName\",StringType, true).\n                add(\"LastKnownAffiliationId\", LongType, true).\n                add(\"PaperCount\", LongType, true).\n                add(\"PaperFamilyCount\", LongType, true).\n                add(\"CitationCount\", LongType, true).\n                add(\"CreatedDate\", DateType, true)\n                \n\n                \nval authordf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(authorSchema).\n                csv(s\"file://$MAG_HOME/$authorsAffTsvFilename\")\n\nval paperSchema \u003d new StructType().\n    add(\"paperId\", LongType, false).\n    add(\"magRank\", IntegerType, true).\n    add(\"doi\", StringType, true).\n    add(\"docTypetmp\", StringType, true).\n    add(\"normalizedTitle\", StringType, true).\n    add(\"title\", StringType, false).\n    add(\"bookTitle\", StringType, true).\n    add(\"pubYear\", IntegerType, true).\n    add(\"pubDate\", StringType, true).\n    add(\"onlineDate\", StringType, true).\n    add(\"publisherName\", StringType, true).\n    add(\"journalId\", StringType, true).\n    add(\"conferenceSeriesId\", LongType, true).\n    add(\"conferenceInstancesId\", LongType, true).\n    add(\"volume\", StringType, true).\n    add(\"issue\", StringType, true).\n    add(\"firstPage\", StringType, true).\n    add(\"lastPage\", StringType, true).\n    add(\"referenceCount\", LongType, true).\n    add(\"citationCount\", LongType, true).\n    add(\"estimatedCitation\", LongType, true).\n    add(\"originalVenue\", StringType, true).\n    add(\"familyId\", StringType, true).\n    add(\"createdDate\", DateType, true)\n    \nval papersdf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n              schema(paperSchema).\n             csv(s\"file://$MAG_HOME/$papersTsvFilename\")\n/*\n\nval MAGsubsetdf \u003d papersdf\n             //.join(broadcast(doisdf), pmcarticlesdf(\"doi\")\u003d\u003d\u003ddoisdf(\"doi\"), \"inner\")\n             //.filter(($\"doi\" \u003d!\u003d \"\") \u0026\u0026 ($\"doi\".isNotNull))\n             .select(papersdf(\"paperId\"),papersdf(\"doi\"))\n  */           \n  \n  val paperAuthorGrpAffdf \u003d paperAuthorAffdf.groupBy(paperAuthorAffdf(\"paperId\"), paperAuthorAffdf(\"AuthorID\"))\n                .agg( collect_list(paperAuthorAffdf(\"AffiliationId\")).as(\"AffiliationId\"))\n\n\nval MAGjoindf \u003d papersdf\n              //.join(broadcast(doisdf), lower(papersdf(\"doi\"))\u003d\u003d\u003ddoisdf(\"doi\"), \"inner\")\n              .join(paperAuthorGrpAffdf, paperAuthorGrpAffdf(\"paperId\")\u003d\u003d\u003dpapersdf(\"paperId\"), \"inner\")\n              .join(authordf, paperAuthorGrpAffdf(\"AuthorId\")\u003d\u003d\u003dauthordf(\"AuthorId\"), \"inner\")\n              .select(papersdf(\"title\"), papersdf(\"paperId\"),lower(papersdf(\"doi\")).as(\"doi\"), authordf(\"DisplayName\") as \"name\", authordf(\"normalizedName\") as \"normname\", unaccent2(authordf(\"normalizedName\")).as(\"ShortNormName\"), paperAuthorGrpAffdf(\"AuthorId\"), paperAuthorGrpAffdf(\"AffiliationId\"))\n              .persist(StorageLevel.DISK_ONLY)\n              //.cache()\n             //.write.csv(\"relatedFoS.csv\")\n                //fieldsOfStudydf.dropDuplicates(\"mainType\").select(\"mainType\").show(200)\n\nprintln(\"MAG_Author_pubCnt:\"+MAGjoindf.count())\n\nMAGjoindf.write.parquet(\"MAGjoindf.parquet\")\n\nval S2_MAG_df \u003d S2_Pub_Authors\n                   .join(MAGjoindf, S2_Pub_Authors(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\")  \u0026\u0026 (S2_Pub_Authors(\"ShortNormName\")\u003d\u003d\u003dMAGjoindf(\"ShortNormName\") || soundex (S2_Pub_Authors(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\"))), \"inner\")\n                   .select(MAGjoindf(\"title\"), MAGjoindf(\"paperId\"), MAGjoindf(\"doi\"),  MAGjoindf(\"ShortNormName\"), MAGjoindf(\"name\"), MAGjoindf(\"AuthorId\").as(\"magAuthorId\"), MAGjoindf(\"AffiliationId\"), S2_Pub_Authors(\"AuthorId\").as(\"S2AuthorId\"),S2_Pub_Authors(\"id\").as(\"S2id\"))\n                   .persist(StorageLevel.DISK_ONLY)\n  //                 .cache()\n\nS2_MAG_df.show(10)\nprintln(\"Join_S2_Mag_auth_pubCnt:\"+S2_MAG_df.count())\n\n//S2_MAG_df.write.parquet(\"S2_MAG_df.parquet\")\n\nval fieldsOfStudyTsvFilename \u003d \"FieldsOfStudy.txt\"\nval paperFieldsOfStudyTsvFilename \u003d \"PaperFieldsOfStudy.txt\"\nval fieldOfStudyChildrenTsvFilename \u003d  \"FieldOfStudyChildren.txt\"\n\n\n\nval paperFieldsOfStudyschema \u003d new StructType().\n                add(\"paperId\", LongType, false).\n                add(\"fieldsOfStudyId\", LongType, false).\n                add(\"score\", DoubleType, true)\n                \nval paperFieldsOfStudydf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(paperFieldsOfStudyschema).\n                csv(s\"file://$MAG_HOME/$paperFieldsOfStudyTsvFilename\")\n//paperFieldsOfStudydf.printSchema\n//paperFieldsOfStudydf.show(5)\n\n//Enrich with FoS (lvl0, lvl1 and other)\n\nval fieldsOfStudyschema \u003d new StructType().\n                add(\"fieldsOfStudyId\", LongType, false).\n                add(\"magRank\", IntegerType, true).\n                add(\"normalizedName\", StringType, true).\n                add(\"name\", StringType, true).\n                add(\"mainType\", StringType, true).\n                add(\"level\", IntegerType, true).\n                add(\"paperCount\", LongType, true).\n                add(\"paperFamilyCount\", LongType, true).\n                add(\"citationCount\", LongType, true).\n                add(\"createdDate\", DateType, true)\n                \nval fieldsOfStudydf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(fieldsOfStudyschema).\n                csv(s\"file://$MAG_HOME/$fieldsOfStudyTsvFilename\")\n\nval fieldOfStudyChildrenschema \u003d new StructType().\n                add(\"fieldOfStudyId\", LongType, false).\n                add(\"childFieldOfStudyId\", LongType, false)\n                \n                \nval fieldOfStudyChildrendf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(fieldOfStudyChildrenschema).\n                csv(s\"file://$MAG_HOME/$fieldOfStudyChildrenTsvFilename\")\n\n//val fos_lvl0 \u003d fieldsOfStudydf.filter($\"level\"\u003d\u003d\u003d0).show()\n\n//val fos_lvl1 \u003d fieldsOfStudydf.filter($\"level\"\u003d\u003d\u003d1).show()\n\n\nval paper_fos \u003d paperFieldsOfStudydf.join(broadcast(fieldsOfStudydf), paperFieldsOfStudydf(\"fieldsOfStudyId\")\u003d\u003d\u003d fieldsOfStudydf(\"fieldsOfStudyId\") \u0026\u0026 $\"level\" \u003e 1, \"inner\")\n                .groupBy(paperFieldsOfStudydf(\"paperId\").as(\"paper_fos_paperId\"))\n                .agg( collect_list(paperFieldsOfStudydf(\"fieldsOfStudyId\")).as(\"fosids\"))\n                //.select(paperFieldsOfStudydf(\"paperId\").as(\"paper_fos_paperId\"), \"fosids\")\n             //   .show(10)\n//\n\nval paper_fos_lvl0 \u003d paperFieldsOfStudydf.join(broadcast(fieldsOfStudydf), paperFieldsOfStudydf(\"fieldsOfStudyId\")\u003d\u003d\u003d fieldsOfStudydf(\"fieldsOfStudyId\") \u0026\u0026 $\"level\"\u003d\u003d\u003d0, \"inner\")\n                .groupBy(paperFieldsOfStudydf(\"paperId\").as(\"paper_foslvl0_paperId\"))\n                .agg( collect_list(paperFieldsOfStudydf(\"fieldsOfStudyId\")).as(\"fosids_lvl0\"))\n               // .show(10)\n                \n                 \n                \nval paper_fos_lvl1 \u003d paperFieldsOfStudydf.join(broadcast(fieldsOfStudydf), paperFieldsOfStudydf(\"fieldsOfStudyId\")\u003d\u003d\u003d fieldsOfStudydf(\"fieldsOfStudyId\") \u0026\u0026 $\"level\"\u003d\u003d\u003d1, \"inner\")\n                .groupBy(paperFieldsOfStudydf(\"paperId\").as(\"paper_foslvl1_paperId\"))\n                .agg( collect_list(paperFieldsOfStudydf(\"fieldsOfStudyId\")).as(\"fosids_lvl1\"))\n                //.show(10)\n             \n                \nval S2_MAG_fos_df \u003d S2_MAG_df\n                     .join(paper_fos, paper_fos(\"paper_fos_paperId\")\u003d\u003d\u003d S2_MAG_df(\"paperId\"), \"inner\")\n                     .join(paper_fos_lvl0, paper_fos_lvl0(\"paper_foslvl0_paperId\") \u003d\u003d\u003d S2_MAG_df(\"paperId\"), \"inner\")\n                     .join(paper_fos_lvl1, paper_fos_lvl1(\"paper_foslvl1_paperId\") \u003d\u003d\u003d S2_MAG_df(\"paperId\"), \"inner\")\n                     .select(\n                        //S2_MAG_df(\"title\"), \n                        S2_MAG_df(\"paperId\"), S2_MAG_df(\"doi\"),  S2_MAG_df(\"ShortNormName\"), S2_MAG_df(\"name\"), S2_MAG_df(\"magAuthorId\"), S2_MAG_df(\"AffiliationId\"), S2_MAG_df(\"S2AuthorId\"),S2_MAG_df(\"S2id\"), \n                            paper_fos(\"fosids\")\n                            ,paper_fos_lvl0(\"fosids_lvl0\") \n                            ,paper_fos_lvl1(\"fosids_lvl1\")\n                            )\n                   .persist(StorageLevel.DISK_ONLY)\n  \n  S2_MAG_fos_df.show(10)            \n  S2_MAG_fos_df.write.parquet(\"S2_MAG_fos_df.parquet\")\n\n \n \n/*\nval S2_MAG_notJoined_df \u003d S2_Pub_Authors\n                   .join(MAGjoindf, S2_Pub_Authors(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026 S2_Pub_Authors(\"ShortNormName\")\u003d\u003d\u003dMAGjoindf(\"ShortNormName\"), \"leftanti\")\n                   .persist(StorageLevel.DISK_ONLY)\n                   //.cache()\n                   \nS2_MAG_notJoined_df.show(50)\nprintln(\"NotJoined_S2_auth_pubCnt:\"+S2_MAG_notJoined_df.count())\n\n\n// match using soundex on display name \u0026 magid\nval phoneticDF \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")), \"inner\")\n                    .select(MAGjoindf(\"paperId\"),MAGjoindf(\"doi\"),  MAGjoindf(\"ShortNormName\"), MAGjoindf(\"name\"), MAGjoindf(\"AuthorId\").as(\"magAuthorId\"), MAGjoindf(\"AffiliationId\"), S2_MAG_notJoined_df(\"AuthorId\").as(\"S2AuthorId\"),S2_MAG_notJoined_df(\"id\").as(\"S2id\"))\n                    .cache()\n                    \nprintln(\"Soundex Full norm name:\"+phoneticDF.count())\nphoneticDF.show(50)\n*/\n\n\n// match based on doi \u0026 soundex(display name) or shortname\n\n/*\nval matcheddois \u003d S2_MAG_df.select($\"doi\").as(\"doi\").distinct().cache()\nprintln(\"matcheddois:\" + matcheddois.count())\n//println(\"S2_MAG_notJoined_df:\" + S2_MAG_notJoined_df.count())\n\n\nval S2_MAG_notJoined_newdois_df \u003d S2_MAG_notJoined_df\n                   .join(matcheddois, S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d matcheddois(\"doi\"), \"leftanti\")\n                   //.persist(StorageLevel.DISK_ONLY)\n\n//println(\"S2_MAG_notJoined_newdois_df:\" + S2_MAG_notJoined_newdois_df.count())\n\nval S2_MAG_dois_df \u003d S2_MAG_notJoined_newdois_df\n                   .join(MAGjoindf, S2_MAG_notJoined_newdois_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\")  \u0026\u0026 (S2_MAG_notJoined_newdois_df(\"ShortNormName\")\u003d\u003d\u003dMAGjoindf(\"ShortNormName\") ||  soundex(S2_MAG_notJoined_newdois_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) ), \"inner\")\n                   .select(MAGjoindf(\"paperId\"),MAGjoindf(\"doi\"),  MAGjoindf(\"ShortNormName\"), MAGjoindf(\"name\"), MAGjoindf(\"AuthorId\").as(\"magAuthorId\"), MAGjoindf(\"AffiliationId\"), S2_MAG_notJoined_newdois_df(\"AuthorId\").as(\"S2AuthorId\"),S2_MAG_notJoined_newdois_df(\"id\").as(\"S2id\"))\n                   .persist(StorageLevel.DISK_ONLY)\n*/\n\n/*\n\nval S2_MAG_dois_df \u003d S2_Pub_Authors\n                   .join(MAGjoindf, (S2_Pub_Authors(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") \u0026\u0026 soundex(S2_Pub_Authors(\"title\")) \u003d\u003d\u003d soundex(MAGjoindf(\"title\"))  ) \u0026\u0026 (S2_Pub_Authors(\"ShortNormName\")\u003d\u003d\u003dMAGjoindf(\"ShortNormName\") ||  soundex(S2_Pub_Authors(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) ), \"inner\")\n                   .select(MAGjoindf(\"title\"), MAGjoindf(\"paperId\"),MAGjoindf(\"doi\"),  MAGjoindf(\"ShortNormName\"), MAGjoindf(\"name\"), MAGjoindf(\"AuthorId\").as(\"magAuthorId\"), MAGjoindf(\"AffiliationId\"), S2_Pub_Authors(\"AuthorId\").as(\"S2AuthorId\"),S2_Pub_Authors(\"id\").as(\"S2id\"))\n                   .persist(StorageLevel.DISK_ONLY)\n  //                 .cache()\n\nS2_MAG_dois_df.show(50)\nprintln(\"S2_MAG_dois_df:\"+S2_MAG_dois_df.count())\n\n/// Union all \u0026 drop duplicates\n\nval S2_MAG_full \u003d  S2_MAG_df\n                    .union(S2_MAG_dois_df)\n                    //.union(phoneticDF)\n                    .dropDuplicates()\n                    .persist(StorageLevel.DISK_ONLY)\n                    \nprintln(\"S2_MAG_full:\"+S2_MAG_full.count())\n\nS2_MAG_full.write.parquet(\"S2_MAG_full.parquet\")\n*/\n\n///////////////////////\n\n\n\n/* other metrics to try\n\nval phoneticDF \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")), \"inner\")\nprintln(\"Soundex short:\"+phoneticDF.count())\n\nval phoneticDF2 \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")), \"inner\")\nprintln(\"Soundex Full:\"+phoneticDF2.count())\n\nval editdistancedf \u003d S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2, \"inner\")\nprintln(\"editdistance:\"+editdistancedf.count())\n*/\n\n\n/*\n// Analyze not matched Authors\n\nval ids \u003d Seq(\"697\", \"2595\", \"25650\", \"25968\", \"29103\" ,\"30267\",\"35158\")\n\nval S2_not_Matched \u003d MAGjoindf.filter($\"paperId\".isin(ids:_*))\nS2_not_Matched.show(100)\n//println(\"Join_UDF_pubCnt:\"+ ACM_S2_MAG_df3.count())\n             \n*/\n\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-04 23:17:59.131",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "+------------------------------------------------------------+\n|doi                                                         |\n+------------------------------------------------------------+\n|10.1002/1097-024x(20001125)30:14\u003c1531::aid-spe347\u003e3.0.co;2-a|\n|10.1002/acs.2651                                            |\n|10.1002/acs.4480070602                                      |\n|10.1002/acs.4480090504                                      |\n|10.1002/asi.10295                                           |\n|10.1002/asi.20013                                           |\n|10.1002/asi.20571                                           |\n|10.1002/asi.21580                                           |\n|10.1002/asi.23100                                           |\n|10.1002/asi.23633                                           |\n|10.1002/asjc.975                                            |\n|10.1002/bltj.20487                                          |\n|10.1002/bltj.20493                                          |\n|10.1002/cav.1529                                            |\n|10.1002/cav.1613                                            |\n|10.1002/cav.402                                             |\n|10.1002/cav.424                                             |\n|10.1002/cpe.1631                                            |\n|10.1002/cpe.3065                                            |\n|10.1002/cpe.3078                                            |\n+------------------------------------------------------------+\nonly showing top 20 rows\n\nDOIs cnt:1661856\nroot\n |-- id: string (nullable \u003d true)\n |-- doi: string (nullable \u003d true)\n |-- magId: string (nullable \u003d true)\n |-- pmid: string (nullable \u003d true)\n |-- name: string (nullable \u003d true)\n |-- authorId: string (nullable \u003d false)\n |-- shortNormName: string (nullable \u003d true)\n\nS2_Author_Pub_Cnt:495954698\nMAG_Author_pubCnt:655732564\n+-------+--------------------+-------------+--------------------+-----------+-------------+----------+--------------------+\n|paperId|                 doi|ShortNormName|                name|magAuthorId|AffiliationId|S2AuthorId|                S2id|\n+-------+--------------------+-------------+--------------------+-----------+-------------+----------+--------------------+\n|   8075|                null|  aaleyxandre|Arturo Menéndez A...|  208182240|         null|  91039401|63f1faf091ce709f5...|\n|   9458|10.1023/a:1015830...|       jpeter|   John V. St. Peter| 2222404504|    130238516|  10302752|fe6ada29c1a0aae39...|\n|   9458|10.1023/a:1015830...|       jpeter|   John V. St. Peter| 2222404504|   2802288015|  10302752|fe6ada29c1a0aae39...|\n|   9458|10.1023/a:1015830...|    yabulhajj|  Yusuf J. Abul-Hajj|  250125303|         null|1401255787|fe6ada29c1a0aae39...|\n|   9458|10.1023/a:1015830...|        wawni|       Walid M. Awni|  523391756|    130238516| 143820084|fe6ada29c1a0aae39...|\n|   9458|10.1023/a:1015830...|        wawni|       Walid M. Awni|  523391756|   2802288015| 143820084|fe6ada29c1a0aae39...|\n|   9715|10.1097/ta.0b013e...|         dkim|       Dennis Y. Kim| 2346949400|     36258959|  33602359|4c40160708c6a6d04...|\n|   9715|10.1097/ta.0b013e...|   lkobayashi|    Leslie Kobayashi| 2584039216|         null|   2723366|4c40160708c6a6d04...|\n|   9715|10.1097/ta.0b013e...|   gbarmparas|   Galinos Barmparas| 2306237718|         null|   4301091|4c40160708c6a6d04...|\n|   9715|10.1097/ta.0b013e...|    dfortlage|       Dale Fortlage| 1980373230|         null|  11042394|4c40160708c6a6d04...|\n|   9715|10.1097/ta.0b013e...|       tcurry|         Terry Curry| 2796472094|         null|  35001233|4c40160708c6a6d04...|\n|   9715|10.1097/ta.0b013e...|     rcoimbra|        Raul Coimbra| 2107252006|         null|   1784821|4c40160708c6a6d04...|\n|   9945|                null|       nowens|         Niamh Owens| 2166725079|         null|  47895963|443173b74176c5372...|\n|  14719|                null|      nnintan|       Norknt nintan|  208477187|         null|  96066841|58920981cd2c65d51...|\n|  21342|                null|     jbarbudo|João Luís Lopes B...| 2279832285|         null| 119355629|e2e0bdb497a92cdb9...|\n|  26543|                null|     sdudonne|   Stéphanie Dudonné| 1763707543|         null|   4365863|3b6902e1547611f66...|\n|  29841|10.1007/978-3-642...|  lkobylinski|   Łukasz Kobyliński| 2123350797|     99542240|   1976361|c64d7aa373d56b501...|\n|  38543|                null|      sgnedoi|           Gnedoĭ Sn| 1980901477|         null|  82187587|55b91566ee146ad92...|\n|  38543|                null|    vlevashev|         Levashev Vs| 2642088160|         null|  84721357|55b91566ee146ad92...|\n|  38543|                null|  lbabushkina|       Babushkina Lm| 2629371277|         null|  87392056|55b91566ee146ad92...|\n|  39256|                null|       hfazio|             H Fazio|  560757315|         null| 113420989|bc2958c77c47e7598...|\n|  44901|                null|      mtobias|      Michael Tobias| 2160152574|         null|   2642616|6f53390607c21e0ce...|\n|  48280|                null|      cmatton|       Cécile Matton| 2107506044|         null|  88181331|4891b5bd01e635e17...|\n|  54536|                null|         diao|                Diao| 2526051463|         null|  88349525|62ab72b9782c510f0...|\n|  54536|                null|      yunpeng|            Yun-Peng| 2293409490|         null|  66490247|62ab72b9782c510f0...|\n|  54536|                null|        zhang|               Zhang| 2663073967|         null| 121318090|62ab72b9782c510f0...|\n|  54536|                null|        zheng|               Zheng| 2623583170|         null| 121318090|62ab72b9782c510f0...|\n|  54536|                null|        zebao|              Ze-Bao|  223407678|         null| 108771191|62ab72b9782c510f0...|\n|  54536|                null|        huang|               Huang| 2568666144|         null| 122829007|62ab72b9782c510f0...|\n|  54536|                null|     shanshan|           Shan-Shan|  324505631|         null| 152134632|62ab72b9782c510f0...|\n|  54536|                null|        zhang|               Zhang| 2663073967|         null| 122900513|62ab72b9782c510f0...|\n|  54536|                null|        zheng|               Zheng| 2623583170|         null| 122900513|62ab72b9782c510f0...|\n|  54536|                null|        houli|              Hou-Li| 1496414269|         null|  89076855|62ab72b9782c510f0...|\n|  54536|                null|          liu|                 Liu| 2694246396|         null| 152414457|62ab72b9782c510f0...|\n|  54536|                null|           li|                  Li| 2637862010|         null| 152414457|62ab72b9782c510f0...|\n|  54536|                null|        kexin|              Ke-Xin| 2672009870|         null|  74784131|62ab72b9782c510f0...|\n|  54536|                null|          liu|                 Liu| 2694246396|         null|  46809614|62ab72b9782c510f0...|\n|  54536|                null|           li|                  Li| 2637862010|         null|  46809614|62ab72b9782c510f0...|\n|  54536|                null|         kang|                Kang| 2497886597|         null| 152370274|62ab72b9782c510f0...|\n|  54536|                null|      tingguo|            Ting-Guo| 2402144557|         null|  80098950|62ab72b9782c510f0...|\n|  54660|        10.1038/9784|         jfox|      Jeffrey L. Fox| 2119106503|         null|  49824758|3099f467c9330e7ed...|\n|  74185|10.1007/s12054-01...|        kaner|        Kirsten Aner| 2164071203|         null|   3097168|dbfee85483e5b5123...|\n|  75167|                null|       kogawa|        Koichi Ogawa| 2938532104|    204291657|   1752502|2cf966d51859c55bd...|\n|  75167|                null|       hfujii|      Hirofumi Fujii| 2629121068|         null| 152826169|2cf966d51859c55bd...|\n|  75167|                null|    ykitagawa|       Yuko Kitagawa| 2115413178|         null|  49044987|2cf966d51859c55bd...|\n|  75167|                null|        akubo|        Atsushi Kubo| 2120834653|         null|   2786605|2cf966d51859c55bd...|\n|  78385|10.1016/0197-0070...|   lbearinger|  Linda H. Bearinger|   50201740|    130238516|   6856105|154713941216e7ddb...|\n|  78385|10.1016/0197-0070...|   emcanarney|Elizabeth R. McAn...| 2788635084|    130238516|   5281000|154713941216e7ddb...|\n|  83748|10.20795/jasess.3...|      snagano|      Shin\u0027ya Nagano| 2552330185|         null|   3197552|df742ddb9d0d4e95b...|\n|  97658|10.1007/978-3-642...|     abennett|     Alan B. Bennett| 2656233885|    205783295|   2632191|67abbecbe53c96edf...|\n+-------+--------------------+-------------+--------------------+-----------+-------------+----------+--------------------+\nonly showing top 50 rows\n\nJoin_S2_Mag_auth_pubCnt:460879637\n+----------+--------------------+-------------+--------------------+-----------+-------------+----------+--------------------+\n|   paperId|                 doi|ShortNormName|                name|magAuthorId|AffiliationId|S2AuthorId|                S2id|\n+----------+--------------------+-------------+--------------------+-----------+-------------+----------+--------------------+\n|2266415680|10.0000/ijamc.201...|       akumar|          Amit Kumar| 2993860391|         null| 144965671|e91905dce1125be8b...|\n|2266415680|10.0000/ijamc.201...|      abansal|      Abhinav Bansal| 2150784986|         null|   2955018|e91905dce1125be8b...|\n|2266415680|10.0000/ijamc.201...|      nbabbar|        Neetu Babbar| 2008186134|         null|   2124638|e91905dce1125be8b...|\n|2586890950|10.0000/ijamc.201...|     aportela|          A. Portela| 2587109077|     21803372| 144465007|57b50edcbddf38f57...|\n|2794805622| 10.0000/ra.v3i4.141|    jcarvalho|Jessica Ferreira ...| 2794853077|         null| 147040851|f19e79988e791d717...|\n|2794805622| 10.0000/ra.v3i4.141|      mcastro|Mariana GonÃ§alve...| 2794747515|         null| 123591667|f19e79988e791d717...|\n|2794805622| 10.0000/ra.v3i4.141|       vsilva|Valeria de Olivei...| 2794612168|         null| 144059788|f19e79988e791d717...|\n|2209116844|       10.0000/smirt|         adar|         Amitabh Dar| 2248952555|         null|  47295118|71e9e5525543b46e6...|\n|2209116844|       10.0000/smirt|    pbaughman|    Paul D. Baughman| 2197246724|         null|  98329886|71e9e5525543b46e6...|\n|2189583459|10.0001/(aj).v2i5...|     lbalogun|       Lekan Balogun| 2656573225|         null|  91655943|adb1d16b2b6b08baf...|\n|2189583459|10.0001/(aj).v2i5...|  lstylistics| Literary Stylistics| 2188064138|         null| 115422880|adb1d16b2b6b08baf...|\n|2601722909|10.0001/(aj).v3i1...|     bhembrom|   Binashree Hembrom| 2600877816|         null| 121471735|78d4a62a11587f8ed...|\n|2287215937|10.0001/(aj).v4i4...|       shidri|      Shkelqim Hidri| 2521677809|         null|  66534822|a7df326b313f240a2...|\n|2604574595|        10.0001/1539|     gmustafa|    Ghada M. Mustafa| 2604635621|         null|  77367604|e9ba08620e86a87d8...|\n|2604574595|        10.0001/1539|      mkotane|    Muneer Y. Kotane| 2605215289|         null|  84408075|e9ba08620e86a87d8...|\n|2604574595|        10.0001/1539|      fazzawi| Fakrea I. Al Azzawi| 2604343994|         null|  83289605|e9ba08620e86a87d8...|\n|2310775189|        10.0001/1650|     librahem|    Lekaa M. Ibrahem| 2592918935|         null| 121972677|b07df9776887db9e2...|\n|2314027384|         10.0001/227|      ljassim|      Lubna K Jassim| 2301352841|         null|  84340318|668c98ba59f94e07b...|\n|2314027384|         10.0001/227|      ahijazi|  Athraa Y Al Hijazi| 2302056903|         null|  27101623|668c98ba59f94e07b...|\n|2992748163|10.0034/edu.v5i2.413|    aprasetyo| Agung Budi Prasetyo| 2991961755|         null|  96357155|08bf9bd4a29afe714...|\n|2992748163|10.0034/edu.v5i2.413|     shikamah|Siti Roudlotul Hi...| 2902145889|         null|  94664170|08bf9bd4a29afe714...|\n|2992748163|10.0034/edu.v5i2.413|    dsudiarti|       Diah Sudiarti| 2903482257|         null|  89118860|08bf9bd4a29afe714...|\n|3006231503|10.0166/fk2.stage...|      freport|Figshare Admin Co...| 3005948722|         null|1582342573|c04cda8828e8f1910...|\n|2802278280|10.0786/jasr.v1i1...|      arehman|   Adil Abdul Rehman| 2800663708|     23923803|  82925000|8e5a6f69e8f501a80...|\n|2908499406|10.1000/riec.v1i3.50|      atorres|Amanda Mendes Torres| 2908041570|    121374431|  27505949|77d73d8cb0b32cbd4...|\n|2908499406|10.1000/riec.v1i3.50|     amartins|Aline Barbosa Tei...| 2907122520|    121374431|  84081663|77d73d8cb0b32cbd4...|\n|2908499406|10.1000/riec.v1i3.50|   brodrigues|Bárbara Karen Mat...| 2907796330|    121374431| 120537334|77d73d8cb0b32cbd4...|\n|2908499406|10.1000/riec.v1i3.50|      mmaciel|Mariza Araújo Mar...| 2908228542|    121374431| 123499236|77d73d8cb0b32cbd4...|\n|2076045575|10.1001/2013.jama...|         vlin|      Vincent W. Lin| 2116346541|    201448701|  46761062|256a8e7c2fd7bed09...|\n|2076045575|10.1001/2013.jama...|     sringold|       Sarah Ringold| 2950293325|   1288882113|   6644747|256a8e7c2fd7bed09...|\n|2076045575|10.1001/2013.jama...|      edevine|   Emily Beth Devine| 1950057684|    201448701|   2683654|256a8e7c2fd7bed09...|\n|2074261013|10.1001/2013.jama...|  tshaneyfelt|Terrence M. Shane...| 1881079728|     32389192|   8974186|b648494c37e92e443...|\n|2063424611|10.1001/2013.jama...|     skangovi|      Shreya Kangovi| 2092315005|         null|   4284383|2c8d073dc4c7ee4cf...|\n|2063424611|10.1001/2013.jama...|        jlong|      Judith A. Long| 2012187813|         null|   4459238|2c8d073dc4c7ee4cf...|\n|2063424611|10.1001/2013.jama...|     eemanuel|  Ezekiel J. Emanuel|   47466971|         null| 145285259|2c8d073dc4c7ee4cf...|\n|2942832374|10.1001/amajethic...|       lallen|      Larry A. Allen| 2154971856|    188538660|   2087525|9404fcab9bc746eca...|\n|1991633748|10.1001/archderm....|   ocanizares|         Canizares O| 2639594543|         null|   3590043|a3cfc1ea74111f9ad...|\n|2045888996|10.1001/archderm....|     rjackson|          R. Jackson| 2560110449|         null|   2190620|5d3801d060270b98c...|\n|2092742813|10.1001/archderm....|       rstern|     Robert S. Stern| 2231932462|         null| 144235797|42c353345615f40df...|\n|2092742813|10.1001/archderm....|   mweinstein| Milton C. Weinstein| 2099023245|         null|   3392678|42c353345615f40df...|\n|2092742813|10.1001/archderm....|       sbaker|     Stuart G. Baker| 2640848110|         null|  10567731|42c353345615f40df...|\n|2029612007|10.1001/archderm....|         mlee|              Lee Mm| 2572417470|    136199984|  49316151|e1fcbdb85376b75fd...|\n|2029612007|10.1001/archderm....|      sgellis|            Gellis S| 2073898139|         null|  49568352|e1fcbdb85376b75fd...|\n|2029612007|10.1001/archderm....|       jdover|            Dover Js| 2938514677|         null|  50311441|e1fcbdb85376b75fd...|\n|2109989233|10.1001/archderm....|      ctaylor|   Charles R. Taylor| 2170343563|    136199984|  49246578|0a6ba8958e12da87d...|\n|2109989233|10.1001/archderm....|      ebailey| Elizabeth M. Bailey| 2574684829|         null| 144487214|0a6ba8958e12da87d...|\n|2020720187|10.1001/archderm....|    skarvonen|Seija-Liisa Karvonen| 2117189767|         null|   7339026|aede0f0574fa7f626...|\n|2020720187|10.1001/archderm....|  mkallioinen|    Matti Kallioinen| 2681554042|         null|  50570885|aede0f0574fa7f626...|\n|2020720187|10.1001/archderm....|  hylaoutinen|    Heli Ylä-Outinen| 2583698299|         null|1420896767|aede0f0574fa7f626...|\n|2020720187|10.1001/archderm....|    mpoyhonen|      Minna Pöyhönen| 2590590408|         null|   3009350|aede0f0574fa7f626...|\n+----------+--------------------+-------------+--------------------+-----------+-------------+----------+--------------------+\nonly showing top 50 rows\n\nS2_MAG_dois_df:341813475\nS2_MAG_full:507498025\n\u001b[1m\u001b[34mS2_HOME\u001b[0m: \u001b[1m\u001b[32mString\u001b[0m \u003d /media/datadisk/Datasets/SemanticScholar\n\u001b[1m\u001b[34mACM_HOME\u001b[0m: \u001b[1m\u001b[32mString\u001b[0m \u003d /home/ometaxas/Datasets/ACM\n\u001b[1m\u001b[34mS2_articles\u001b[0m: \u001b[1m\u001b[32mString\u001b[0m \u003d sample-S2-records.gz\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger\nimport org.slf4j.LoggerFactory\nimport org.apache.spark.sql.functions.concat_ws\nimport org.apache.spark.sql.functions.countDistinct\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer\nimport java.util.Locale\nimport org.apache.spark.storage.StorageLevel\n\u001b[1m\u001b[34munaccent2\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.expressions.UserDefinedFunction\u001b[0m \u003d SparkUserDefinedFunction($Lambda$2015/703209238@442678f2,StringType,L...\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d0"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d1"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d2"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d3"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d4"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d5"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d6"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d7"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d8"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d9"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d10"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d11"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d12"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d13"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601384410282_918152300",
+      "id": "paragraph_1601384410282_918152300",
+      "dateCreated": "2020-09-29 16:00:10.282",
+      "dateStarted": "2020-10-04 00:04:50.556",
+      "dateFinished": "2020-10-04 06:29:41.977",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\n  val paperAuthorGrpAffdf \u003d paperAuthorAffdf.groupBy(paperAuthorAffdf(\"paperId\"), paperAuthorAffdf(\"AuthorID\"))\n                .agg( collect_list(paperAuthorAffdf(\"AffiliationId\")).as(\"AffiliationId\"))\n\npaperAuthorGrpAffdf.show(10)\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-04 21:41:58.586",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "+-------+----------+-------------+\n|paperId|  AuthorID|AffiliationId|\n+-------+----------+-------------+\n|    524|2989460491|  [148283060]|\n|   2854| 242451505|           []|\n|   7230|2700237503|  [142823887]|\n|  13013|1969752603|           []|\n|  15142|2643860754|           []|\n|  21565|2157095170|           []|\n|  23244|2643292568|           []|\n|  24951| 273633475|           []|\n|  24951| 417189370|           []|\n|  26348|2724939520|           []|\n+-------+----------+-------------+\nonly showing top 10 rows\n\n\u001b[1m\u001b[34mpaperAuthorGrpAffdf\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m \u003d [paperId: bigint, AuthorID: bigint ... 1 more field]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d83"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601836902481_232659225",
+      "id": "paragraph_1601836902481_232659225",
+      "dateCreated": "2020-10-04 21:41:42.481",
+      "dateStarted": "2020-10-04 21:41:58.589",
+      "dateFinished": "2020-10-04 22:17:11.048",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\n// get FoS\n\nval S2_MAG_df_S2Ids \u003d S2_MAG_df.select($\"S2id\").distinct()\nprintln(\"S2_MAG_df_S2Ids:\" + S2_MAG_df_S2Ids.count())\n\nval S2_MAG_df_paperIds \u003d S2_MAG_df.select($\"paperId\").distinct()\nprintln(\"S2_MAG_df_paperIds:\" + S2_MAG_df_paperIds.count())\n\nval S2_MAG_df_magAuthorIds \u003d S2_MAG_df.select($\"magAuthorId\").distinct()\nprintln(\"S2_MAG_df_magAuthorIds:\" + S2_MAG_df_magAuthorIds.count())\n\nval S2_MAG_df_S2AuthorIds \u003d S2_MAG_df.select($\"S2AuthorId\").distinct()\nprintln(\"S2_MAG_df_S2AuthorIds:\" + S2_MAG_df_S2AuthorIds.count())\n\nval S2_Pub_Authors_authorIds \u003d S2_Pub_Authors.select($\"authorId\").distinct()\nprintln(\"S2_Pub_Authors_authorIds:\" + S2_Pub_Authors_authorIds.count())\n\nval S2_Pub_Authors_Ids \u003d S2_Pub_Authors.select($\"id\").distinct()\nprintln(\"S2_Pub_Authors_Ids:\" + S2_Pub_Authors_Ids.count())\n\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-04 11:51:03.381",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "S2_MAG_df_S2Ids:162214687\nS2_MAG_df_paperIds:162214687\nS2_MAG_df_magAuthorIds:169096437\nS2_MAG_df_S2AuthorIds:58104103\nS2_Pub_Authors_authorIds:64192152\nS2_Pub_Authors_Ids:185025249\n\u001b[1m\u001b[34mS2_MAG_df_S2Ids\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [S2id: string]\n\u001b[1m\u001b[34mS2_MAG_df_paperIds\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [paperId: bigint]\n\u001b[1m\u001b[34mS2_MAG_df_magAuthorIds\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [magAuthorId: bigint]\n\u001b[1m\u001b[34mS2_MAG_df_S2AuthorIds\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [S2AuthorId: string]\n\u001b[1m\u001b[34mS2_Pub_Authors_authorIds\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [authorId: string]\n\u001b[1m\u001b[34mS2_Pub_Authors_Ids\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [id: string]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d23"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d24"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d25"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d26"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d27"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d28"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601799584863_890047276",
+      "id": "paragraph_1601799584863_890047276",
+      "dateCreated": "2020-10-04 11:19:44.863",
+      "dateStarted": "2020-10-04 11:51:03.384",
+      "dateFinished": "2020-10-04 12:30:46.814",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\n//Get FoS\nval fieldsOfStudyTsvFilename \u003d \"FieldsOfStudy.txt\"\nval paperFieldsOfStudyTsvFilename \u003d \"PaperFieldsOfStudy.txt\"\nval fieldOfStudyChildrenTsvFilename \u003d  \"FieldOfStudyChildren.txt\"\n\n\n\nval paperFieldsOfStudyschema \u003d new StructType().\n                add(\"paperId\", LongType, false).\n                add(\"fieldsOfStudyId\", LongType, false).\n                add(\"score\", DoubleType, true)\n                \nval paperFieldsOfStudydf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(paperFieldsOfStudyschema).\n                csv(s\"file://$MAG_HOME/$paperFieldsOfStudyTsvFilename\")\n//paperFieldsOfStudydf.printSchema\n//paperFieldsOfStudydf.show(5)\n\nval fieldsOfStudyschema \u003d new StructType().\n                add(\"fieldsOfStudyId\", LongType, false).\n                add(\"magRank\", IntegerType, true).\n                add(\"normalizedName\", StringType, true).\n                add(\"name\", StringType, true).\n                add(\"mainType\", StringType, true).\n                add(\"level\", IntegerType, true).\n                add(\"paperCount\", LongType, true).\n                add(\"paperFamilyCount\", LongType, true).\n                add(\"citationCount\", LongType, true).\n                add(\"createdDate\", DateType, true)\n                \nval fieldsOfStudydf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(fieldsOfStudyschema).\n                csv(s\"file://$MAG_HOME/$fieldsOfStudyTsvFilename\")\n\nval fieldOfStudyChildrenschema \u003d new StructType().\n                add(\"fieldOfStudyId\", LongType, false).\n                add(\"childFieldOfStudyId\", LongType, false)\n                \n                \nval fieldOfStudyChildrendf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(fieldOfStudyChildrenschema).\n                csv(s\"file://$MAG_HOME/$fieldOfStudyChildrenTsvFilename\")\n\n//val fos_lvl0 \u003d fieldsOfStudydf.filter($\"level\"\u003d\u003d\u003d0).show()\n\n//val fos_lvl1 \u003d fieldsOfStudydf.filter($\"level\"\u003d\u003d\u003d1).show()\n\n\nval paper_fos \u003d paperFieldsOfStudydf.join(broadcast(fieldsOfStudydf), paperFieldsOfStudydf(\"fieldsOfStudyId\")\u003d\u003d\u003d fieldsOfStudydf(\"fieldsOfStudyId\") \u0026\u0026 $\"level\" \u003e 1, \"inner\")\n                .groupBy(paperFieldsOfStudydf(\"paperId\").as(\"paper_fos_paperId\"))\n                .agg( collect_list(paperFieldsOfStudydf(\"fieldsOfStudyId\")).as(\"fosids\"))\n                //.select(paperFieldsOfStudydf(\"paperId\").as(\"paper_fos_paperId\"), \"fosids\")\n             //   .show(10)\n//\n\nval paper_fos_lvl0 \u003d paperFieldsOfStudydf.join(broadcast(fieldsOfStudydf), paperFieldsOfStudydf(\"fieldsOfStudyId\")\u003d\u003d\u003d fieldsOfStudydf(\"fieldsOfStudyId\") \u0026\u0026 $\"level\"\u003d\u003d\u003d0, \"inner\")\n                .groupBy(paperFieldsOfStudydf(\"paperId\").as(\"paper_foslvl0_paperId\"))\n                .agg( collect_list(paperFieldsOfStudydf(\"fieldsOfStudyId\")).as(\"fosids_lvl0\"))\n               // .show(10)\n                \n                 \n                \nval paper_fos_lvl1 \u003d paperFieldsOfStudydf.join(broadcast(fieldsOfStudydf), paperFieldsOfStudydf(\"fieldsOfStudyId\")\u003d\u003d\u003d fieldsOfStudydf(\"fieldsOfStudyId\") \u0026\u0026 $\"level\"\u003d\u003d\u003d1, \"inner\")\n                .groupBy(paperFieldsOfStudydf(\"paperId\").as(\"paper_foslvl1_paperId\"))\n                .agg( collect_list(paperFieldsOfStudydf(\"fieldsOfStudyId\")).as(\"fosids_lvl1\"))\n                //.show(10)\n             \n                \nval S2_MAG_fos_df \u003d S2_MAG_df\n                     .join(paper_fos, paper_fos(\"paper_fos_paperId\")\u003d\u003d\u003d S2_MAG_df(\"paperId\"), \"inner\")\n                     .join(paper_fos_lvl0, paper_fos_lvl0(\"paper_foslvl0_paperId\") \u003d\u003d\u003d S2_MAG_df(\"paperId\"), \"inner\")\n                     .join(paper_fos_lvl1, paper_fos_lvl1(\"paper_foslvl1_paperId\") \u003d\u003d\u003d S2_MAG_df(\"paperId\"), \"inner\")\n                     .select(\n                        //S2_MAG_df(\"title\"), \n                        S2_MAG_df(\"paperId\"), S2_MAG_df(\"doi\"),  S2_MAG_df(\"ShortNormName\"), S2_MAG_df(\"name\"), S2_MAG_df(\"magAuthorId\"), S2_MAG_df(\"AffiliationId\"), S2_MAG_df(\"S2AuthorId\"),S2_MAG_df(\"S2id\"), \n                            paper_fos(\"fosids\")\n                            ,paper_fos_lvl0(\"fosids_lvl0\") \n                            ,paper_fos_lvl1(\"fosids_lvl1\")\n                            )\n                   .persist(StorageLevel.DISK_ONLY)\n  \n  S2_MAG_fos_df.show(10)            \n  S2_MAG_fos_df.write.parquet(\"S2_MAG_fos_df.parquet\")\n\n \n                /*\n\nval S2_MAG_fos_df \u003d S2_MAG_df.join(paper_fos.as(\"lvl0\"), $\"lvl0.paperId\"\u003d\u003d\u003d S2_MAG_df(\"paperId\") \u0026\u0026 $\"lvl0.level\"\u003d\u003d\u003d0, \"inner\")\n                    .join(paper_fos.as(\"lvl1\"), $\"lvl1.paperId\"\u003d\u003d\u003d S2_MAG_df(\"paperId\") \u0026\u0026 $\"lvl1.level\"\u003d\u003d\u003d1, \"inner\")\n                    .join(paper_fos.as(\"lvl1\"), $\"lvl1.paperId\"\u003d\u003d\u003d S2_MAG_df(\"paperId\") \u0026\u0026 $\"lvl1.level\"\u003d\u003d\u003d1, \"inner\")\n                    .select(S2_MAG_df(\"title\"), S2_MAG_df(\"paperId\"),S2_MAG_df(\"doi\"),  S2_MAG_df(\"ShortNormName\"), S2_MAG_df(\"name\"), S2_MAG_df(\"magAuthorId\"), S2_MAG_df(\"AffiliationId\"), S2_MAG_df(\"S2AuthorId\"),S2_MAG_df(\"S2id\"), $\"lvl1.fieldsOfStudyId\" as)\n                   .persist(StorageLevel.DISK_ONLY)\n\n                //.filter($\"level\"\u003d\u003d\u003d0)\n                //.select($\"paperId\").distinct()\n                //.orderBy(paperFieldsOfStudydf(\"paperIdFieldsOfStudy\"))\n                //.show(100)\n                \n                println(\"paperFieldsOfStudydf:\" + paperFieldsOfStudydf.select($\"paperId\").distinct().count() )\n                \n                println(\"paper_fos_lvl0:\" + paper_fos.filter($\"level\"\u003d\u003d\u003d0)\n                .select($\"paperId\").distinct().count())\n                \n                println(\"paper_fos_lvl0:\" + paper_fos.filter($\"level\"\u003d\u003d\u003d1)\n                .select($\"paperId\").distinct().count())\n                \n                //.orderBy(paperFieldsOfStudydf(\"paperIdFieldsOfStudy\"))\n                //.show(100)\n                \n*/\n\n\n                \n",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-04 21:36:18.294",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "+-------+--------------------+-------------+------------------+-----------+-------------+----------+--------------------+--------------------+-----------+-----------+\n|paperId|                 doi|ShortNormName|              name|magAuthorId|AffiliationId|S2AuthorId|                S2id|              fosids|fosids_lvl0|fosids_lvl1|\n+-------+--------------------+-------------+------------------+-----------+-------------+----------+--------------------+--------------------+-----------+-----------+\n|   9458|10.1023/a:1015830...|       jpeter| John V. St. Peter| 2222404504|    130238516|  10302752|fe6ada29c1a0aae39...|[57600042, 277913...|[185592680]| [43617362]|\n|   9458|10.1023/a:1015830...|       jpeter| John V. St. Peter| 2222404504|   2802288015|  10302752|fe6ada29c1a0aae39...|[57600042, 277913...|[185592680]| [43617362]|\n|   9458|10.1023/a:1015830...|    yabulhajj|Yusuf J. Abul-Hajj|  250125303|         null|1401255787|fe6ada29c1a0aae39...|[57600042, 277913...|[185592680]| [43617362]|\n|   9458|10.1023/a:1015830...|        wawni|     Walid M. Awni|  523391756|    130238516| 143820084|fe6ada29c1a0aae39...|[57600042, 277913...|[185592680]| [43617362]|\n|   9458|10.1023/a:1015830...|        wawni|     Walid M. Awni|  523391756|   2802288015| 143820084|fe6ada29c1a0aae39...|[57600042, 277913...|[185592680]| [43617362]|\n|   9715|10.1097/ta.0b013e...|         dkim|     Dennis Y. Kim| 2346949400|     36258959|  33602359|4c40160708c6a6d04...|[17624336, 277651...| [71924100]|[126322002]|\n|   9715|10.1097/ta.0b013e...|   lkobayashi|  Leslie Kobayashi| 2584039216|         null|   2723366|4c40160708c6a6d04...|[17624336, 277651...| [71924100]|[126322002]|\n|   9715|10.1097/ta.0b013e...|   gbarmparas| Galinos Barmparas| 2306237718|         null|   4301091|4c40160708c6a6d04...|[17624336, 277651...| [71924100]|[126322002]|\n|   9715|10.1097/ta.0b013e...|    dfortlage|     Dale Fortlage| 1980373230|         null|  11042394|4c40160708c6a6d04...|[17624336, 277651...| [71924100]|[126322002]|\n|   9715|10.1097/ta.0b013e...|       tcurry|       Terry Curry| 2796472094|         null|  35001233|4c40160708c6a6d04...|[17624336, 277651...| [71924100]|[126322002]|\n+-------+--------------------+-------------+------------------+-----------+-------------+----------+--------------------+--------------------+-----------+-----------+\nonly showing top 10 rows\n\n\u001b[1m\u001b[34mfieldsOfStudyTsvFilename\u001b[0m: \u001b[1m\u001b[32mString\u001b[0m \u003d FieldsOfStudy.txt\n\u001b[1m\u001b[34mpaperFieldsOfStudyTsvFilename\u001b[0m: \u001b[1m\u001b[32mString\u001b[0m \u003d PaperFieldsOfStudy.txt\n\u001b[1m\u001b[34mfieldOfStudyChildrenTsvFilename\u001b[0m: \u001b[1m\u001b[32mString\u001b[0m \u003d FieldOfStudyChildren.txt\n\u001b[1m\u001b[34mpaperFieldsOfStudyschema\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.types.StructType\u001b[0m \u003d StructType(StructField(paperId,LongType,false), StructField(fieldsOfStudyId,LongType,false), StructField(score,DoubleType,true))\n\u001b[1m\u001b[34mpaperFieldsOfStudydf\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m \u003d [paperId: bigint, fieldsOfStudyId: bigint ... 1 more field]\n\u001b[1m\u001b[34mfieldsOfStudyschema\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.types.StructType\u001b[0m \u003d StructType(StructField(fieldsOfStudyId,LongType,false), StructField(magRank,IntegerType...\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d80"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d81"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601803326013_646801756",
+      "id": "paragraph_1601803326013_646801756",
+      "dateCreated": "2020-10-04 12:22:06.013",
+      "dateStarted": "2020-10-04 19:36:08.530",
+      "dateFinished": "2020-10-04 20:08:04.210",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\nS2_MAG_fos_df.write.parquet(\"S2_MAG_fos_df.parquet\")",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-04 21:36:56.501",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d82"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601836578386_372301766",
+      "id": "paragraph_1601836578386_372301766",
+      "dateCreated": "2020-10-04 21:36:18.386",
+      "dateStarted": "2020-10-04 21:36:56.504",
+      "dateFinished": "2020-10-04 22:13:27.909",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\n\n val multidois \u003d papersdf\n     .filter(($\"doi\" \u003d!\u003d \"\") \u0026\u0026 ($\"doi\".isNotNull))\n     .groupBy(\"doi\")\n    .agg(\n      count(\"paperId\").as(\"paperId_cnt\")\n      )\n    .where(col(\"paperId_cnt\") \u003e 1)\n    .orderBy(desc(\"paperId_cnt\"))\n    \n    multidois.show(100)\n    println(\"multidois:\"+ multidois.count())\n    \n  ",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-04 10:29:30.839",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "+--------------------+-----------+\n|                 doi|paperId_cnt|\n+--------------------+-----------+\n|          10.5007/%X|       6263|\n|    10.4000/LINX.883|       2411|\n|10.13039/50110000...|       1891|\n|   10.12739/10.12739|       1590|\n|        10.15253/REV|       1470|\n|10.13039/50110000...|       1242|\n|     10.2510/COLOMB.|       1147|\n|          10.3968/%X|       1080|\n|       10.13005/BBRA|       1073|\n|           10.3968/N|       1040|\n|10.1234/OJSDJ.V1I1.6|        889|\n|        10.3305/NUTR|        797|\n|10.13039/50110000...|        713|\n|10.4000/VARIATION...|        694|\n|          10.1590/%X|        633|\n|         10.21895/IN|        561|\n|       10.22264/CLIO|        528|\n|        10.21615/CES|        525|\n|   10.12795/PIXELBIT|        506|\n|10.19044/ESJ.2014...|        400|\n|     10.4302/PHOTON.|        395|\n|10.13039/50110000...|        389|\n|          10.11602/C|        378|\n|10.5020/23180730....|        377|\n|10.5073/JKA.2018....|        372|\n| 10.9753/ICCE.V25.%P|        372|\n|           10.5216/C|        340|\n|10.1111/J.0042-70...|        316|\n|          10.13471/J|        314|\n|     10.3969/J.ISSN.|        301|\n|10.1241/JOHOKANRI...|        292|\n|10.7213/CIENCIAAN...|        290|\n|    10.6035/ASPARKIA|        289|\n|10.19044/ESJ.2013...|        281|\n|          10.5821/DC|        279|\n|10.3220/REP_20_1_...|        278|\n|          10.1344/%X|        275|\n| 10.9753/ICCE.V26.%P|        274|\n|  10.5212/OLHARPROFR|        271|\n|10.3104/CASE-STUD...|        267|\n|        10.5281/SPPA|        263|\n| 10.9753/ICCE.V23.%P|        261|\n|10.3978/J.ISSN.20...|        260|\n|         10.20998/%X|        257|\n| 10.9753/ICCE.V24.%P|        255|\n|       10.35306/REV.|        242|\n| 10.9753/ICCE.V22.%P|        239|\n|10.6035/MILLARS.A...|        239|\n|10.3970/CMC.2018....|        238|\n|    10.18305/SCRIPTA|        234|\n|        10.21880/IUS|        232|\n|  10.5212/PUBLICATIO|        230|\n|        10.24198/BSC|        228|\n|          10.5935/RL|        226|\n|         10.18318/TD|        219|\n|        10.21157/JIM|        213|\n|10.9789/2175-5361...|        209|\n|10.19044/ESJ.2013...|        206|\n|10.13039/50110000...|        205|\n|      10.32765/WARTA|        199|\n|10.19044/ESJ.2016...|        198|\n|   10.4057/JSR.67.21|        198|\n| 10.9753/ICCE.V19.%P|        197|\n|       10.31078/JK%X|        193|\n|     10.15171/MIDDLE|        191|\n| 10.9753/ICCE.V21.%P|        191|\n| 10.9753/ICCE.V20.%P|        190|\n|           10.2436/E|        186|\n|          10.12807/T|        186|\n|       10.16887/FIEP|        181|\n|10.33881/1657-251...|        181|\n|10.1371/JOURNAL.P...|        179|\n|           10.1615/J|        178|\n|10.1590/S0100-738...|        178|\n|10.19044/ESJ.2014...|        177|\n|10.4172/2155-952X...|        175|\n| 10.4314/JFAS.V10I6S|        174|\n|10.33881/2027-178...|        169|\n|   10.11616/ABANTSBE|        168|\n|10.4000/BOOKS.PUP...|        167|\n|10.4172/2155-952X...|        164|\n|         10.12697/%X|        164|\n|      10.33130/ASIAN|        163|\n|   10.14421/ASY-SYIR|        162|\n|   10.6035/DOSSIERSF|        160|\n|  10.1234/RAT2011N11|        159|\n|10.26843/INVESTIG...|        159|\n| 10.9753/ICCE.V17.%P|        159|\n|10.4172/2167-1168...|        158|\n|        10.5216/REV.|        156|\n|10.4172/2155-952X...|        156|\n|          10.1109/IT|        156|\n|10.5073/JKA.2016....|        155|\n|10.1007/S13197-01...|        155|\n|10.5073/JKA.2012....|        152|\n| 10.9753/ICCE.V18.%P|        149|\n|10.5753/CBIE.SBIE...|        146|\n|     10.6035/RECERCA|        146|\n|    10.18304/SCRIPTA|        145|\n|10.4172/2168-9881...|        143|\n+--------------------+-----------+\nonly showing top 100 rows\n\nmultidois:480441\n\u001b[1m\u001b[34mmultidois\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [doi: string, paperId_cnt: bigint]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d15"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d16"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601792055895_1655032888",
+      "id": "paragraph_1601792055895_1655032888",
+      "dateCreated": "2020-10-04 09:14:15.895",
+      "dateStarted": "2020-10-04 09:56:24.355",
+      "dateFinished": "2020-10-04 10:01:52.758",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\n\n val multidois \u003d papersdf\n     .filter(($\"doi\" \u003d!\u003d \"\") \u0026\u0026 ($\"doi\".isNotNull))\n     .select($\"paperId\", $\"doi\",  soundex (papersdf(\"title\")).as(\"tlt\"))\n     .groupBy(\"doi\", \"tlt\")\n    .agg(\n      count(\"paperId\").as(\"paperId_cnt\")\n      )\n    .where(col(\"paperId_cnt\") \u003e 1)\n    .orderBy(desc(\"paperId_cnt\"))\n    \n    multidois.show(100)\n    println(\"multidois:\"+ multidois.count())",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-04 10:32:30.171",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "+--------------------+----+-----------+\n|                 doi| tlt|paperId_cnt|\n+--------------------+----+-----------+\n| 10.4314/JFAS.V10I6S|R362|        136|\n|          10.5007/%X|E213|         94|\n|10.5523/BRIS.3H91...|E122|         69|\n|          10.5007/%X|E536|         65|\n|       10.13005/BBRA|E123|         61|\n|10.13039/50110000...|E123|         61|\n|        10.15253/REV|N625|         58|\n|        10.3305/NUTR|N362|         51|\n|          10.3968/%X|R262|         50|\n|10.9876/10.9876/V...|P526|         48|\n|  10.29264/PROSIDING|P526|         48|\n|10.3746/PNF.2015....|W424|         47|\n|          10.3968/%X|A542|         47|\n|          10.5007/%X|A632|         46|\n|          10.5007/%X|I536|         45|\n|          10.5007/%X|C523|         45|\n|          10.5007/%X|L163|         45|\n|          10.5007/%X|A143|         44|\n|          10.5007/%X|D552|         44|\n|          10.5007/%X|A542|         44|\n|10.3384/BOOK.DIVA...|C136|         43|\n|10.13039/50110000...|F326|         43|\n|          10.5007/%X|E233|         42|\n|        10.3305/NUTR|E233|         42|\n|          10.5007/%X|E336|         42|\n|        10.15253/REV|P614|         41|\n|          10.5007/%X|C536|         41|\n|    10.4000/LINX.883|B534|         40|\n|    10.5066/F7T151Q4|C252|         40|\n|10.13039/50110000...|E123|         39|\n|        10.15253/REV|P621|         39|\n| 10.3301/ROL.2016.79|S252|         39|\n|          10.5007/%X|A536|         38|\n|   10.12739/10.12739|T123|         38|\n|      10.3978/ASVIDE|P612|         38|\n|           10.3968/N|A233|         38|\n|          10.3968/%X|A233|         37|\n|        10.3305/NUTR|E142|         37|\n|10.13039/50110000...|C623|         35|\n|          10.5007/%X|R162|         35|\n|    10.4000/LINX.883|A236|         34|\n|          10.5007/%X|P432|         34|\n|         10.21895/IN|C525|         34|\n|   10.12739/10.12739|T623|         34|\n|          10.5007/%X|A162|         33|\n|          10.5007/%X|P626|         33|\n|        10.21157/JIM|P526|         33|\n|10.1234/OJSDJ.V1I1.6|E143|         33|\n|         10.21895/IN|D365|         33|\n|         10.21895/IN|E234|         33|\n|          10.1590/%X|E213|         32|\n|          10.5007/%X|A252|         32|\n|          10.5007/%X|A212|         32|\n|        10.21157/JIM|I242|         32|\n|       10.13005/BBRA|E143|         31|\n|          10.5007/%X|E321|         31|\n|        10.3305/NUTR|E123|         31|\n|          10.5007/%X|N652|         31|\n|10.13039/50110000...|E123|         30|\n|          10.5007/%X|P632|         30|\n|          10.5007/%X|P623|         29|\n|          10.5007/%X|C516|         29|\n|10.13039/50110000...|E233|         29|\n|10.5020/23180730....|A542|         29|\n|          10.5007/%X|U516|         29|\n|          10.5007/%X|A163|         29|\n|     10.2510/COLOMB.|E233|         28|\n|          10.5007/%X|P526|         28|\n|10.1017/CBO978051...|C452|         28|\n|          10.5007/%X|A363|         28|\n|      10.33085/DUNIA|F654|         28|\n|          10.5007/%X|O525|         28|\n|   10.12739/10.12739|Y426|         28|\n|    10.4000/LINX.883|S222|         28|\n|10.3301/ROL.2014.140|S252|         27|\n|       10.13005/BBRA|A531|         27|\n|10.1234/OJSDJ.V1I1.6|E123|         27|\n|           10.3968/N|R262|         27|\n|          10.5007/%X|R142|         26|\n|          10.5007/%X|A223|         26|\n|          10.5007/%X|C553|         26|\n|          10.5007/%X|O162|         26|\n|          10.5007/%X|I516|         25|\n|       10.13005/BBRA|I243|         25|\n|          10.5007/%X|A142|         25|\n|          10.5007/%X|A516|         25|\n|          10.5007/%X|A165|         25|\n|   10.12739/10.12739|I512|         25|\n|10.13039/50110000...|I514|         25|\n|    10.4000/LINX.883|S216|         25|\n|          10.3968/%X|S335|         25|\n|   10.12739/10.12739|S516|         25|\n|       10.13005/BBRA|P632|         24|\n|10.13039/50110000...|A542|         24|\n|          10.5007/%X|J416|         24|\n|          10.5007/%X|O253|         24|\n|          10.5007/%X|A122|         24|\n|         10.21895/IN|C623|         24|\n|10.3746/PNF.2015....|C521|         24|\n|  10.17617/2.3027595|P155|         23|\n+--------------------+----+-----------+\nonly showing top 100 rows\n\nmultidois:374232\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger\nimport org.slf4j.LoggerFactory\nimport org.apache.spark.sql.functions.concat_ws\nimport org.apache.spark.sql.functions.countDistinct\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer\nimport java.util.Locale\nimport org.apache.spark.storage.StorageLevel\n\u001b[1m\u001b[34mmultidois\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [doi: string, tlt: string ... 1 more field]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d21"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d22"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601795409807_2017940796",
+      "id": "paragraph_1601795409807_2017940796",
+      "dateCreated": "2020-10-04 10:10:09.807",
+      "dateStarted": "2020-10-04 10:32:30.174",
+      "dateFinished": "2020-10-04 10:38:28.072",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\n\n\nval matcheddois \u003d S2_MAG_df.select($\"doi\").as(\"doi\").distinct().cache()\nprintln(\"matcheddois:\" + matcheddois.count())\n\nprintln(\"S2_MAG_notJoined_df:\" + S2_MAG_notJoined_df.count())\n\n\nval S2_MAG_notJoined_newdois_df \u003d S2_MAG_notJoined_df\n                   .join(matcheddois, S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d matcheddois(\"doi\"), \"leftanti\")\n                   .persist(StorageLevel.DISK_ONLY)\n\nprintln(\"S2_MAG_notJoined_newdois_df:\" + S2_MAG_notJoined_newdois_df.count())\n\nval S2_MAG_dois_df \u003d S2_MAG_notJoined_newdois_df\n                   .join(MAGjoindf, S2_MAG_notJoined_newdois_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\")  \u0026\u0026 (S2_MAG_notJoined_newdois_df(\"ShortNormName\")\u003d\u003d\u003dMAGjoindf(\"ShortNormName\") ||  soundex(S2_MAG_notJoined_newdois_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\") )), \"inner\")\n                   .select(MAGjoindf(\"paperId\"),MAGjoindf(\"doi\"),  MAGjoindf(\"ShortNormName\"), MAGjoindf(\"name\"), MAGjoindf(\"AuthorId\").as(\"magAuthorId\"), MAGjoindf(\"AffiliationId\"), S2_MAG_notJoined_newdois_df(\"AuthorId\").as(\"S2AuthorId\"))\n                   .persist(StorageLevel.DISK_ONLY)\n  //                 .cache()\n\nS2_MAG_dois_df.show(50)\nprintln(\"Join_S2_Mag_auth_dois_pubCnt:\"+S2_MAG_dois_df.count())\n\nval S2_MAG_full \u003d  S2_MAG_df\n                    .union(S2_MAG_dois_df)\n                    .union(phoneticDF3)\n                    .dropDuplicates()\n                    .persist(StorageLevel.DISK_ONLY)\n                    \nprintln(\"S2_MAG_full:\"+S2_MAG_full.count())\n\nS2_MAG_full.write.parquet(\"S2_MAG_full.parquet\")\n\n//S2_MAG_notJoined_df.filter(($\"doi\" \u003d\u003d\u003d \"10.1001/jama.281.22.2127\")).show(500)\n//println(\"S2_Author_Pub_Cnt:\" + S2_Pub_Authors.count())\n//S2_Pub_Authors.dropDuplicates()\n//println(\"S2_Author_Pub_Cnt no duplicates:\" + S2_Pub_Authors.count())\n//S2_Pub_Authors.filter(($\"doi\" \u003d\u003d\u003d \"10.1001/jama.281.22.2127\")).select(($\"magId\")).as(\"magId\")\n//.distinct().show(500)\n\n//S2_MAG_all_df.filter(($\"paperId\" \u003d\u003d\u003d \"2118488619\")).show(1500)\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-03 18:36:09.980",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "matcheddois:83218308\nS2_MAG_notJoined_df:45402042\nS2_MAG_notJoined_newdois_df:41766346\n\u001b[1m\u001b[34mmatcheddois\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [doi: string]\n\u001b[1m\u001b[34mS2_MAG_notJoined_newdois_df\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [id: string, doi: string ... 5 more fields]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d60"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d61"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d62"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601715719209_2003095870",
+      "id": "paragraph_1601715719209_2003095870",
+      "dateCreated": "2020-10-03 12:01:59.210",
+      "dateStarted": "2020-10-03 13:01:28.956",
+      "dateFinished": "2020-10-03 13:12:08.705",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\nval S2_MAG_dois_df \u003d S2_MAG_notJoined_newdois_df\n                   .join(MAGjoindf, S2_MAG_notJoined_newdois_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\")  \u0026\u0026 (S2_MAG_notJoined_newdois_df(\"ShortNormName\")\u003d\u003d\u003dMAGjoindf(\"ShortNormName\") ||  soundex(S2_MAG_notJoined_newdois_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\") )), \"inner\")\n                   .select(MAGjoindf(\"paperId\"),MAGjoindf(\"doi\"),  MAGjoindf(\"ShortNormName\"), MAGjoindf(\"name\"), MAGjoindf(\"AuthorId\").as(\"magAuthorId\"), MAGjoindf(\"AffiliationId\"), S2_MAG_notJoined_newdois_df(\"AuthorId\").as(\"S2AuthorId\"))\n                   .persist(StorageLevel.DISK_ONLY)\n  //                 .cache()\n\nS2_MAG_dois_df.show(50)\nprintln(\"Join_S2_Mag_auth_dois_pubCnt:\"+S2_MAG_dois_df.count())\n\nval S2_MAG_full \u003d  S2_MAG_df\n                    .union(S2_MAG_dois_df)\n                    .union(phoneticDF3)\n                    .dropDuplicates()\n                    .persist(StorageLevel.DISK_ONLY)\n                    \nprintln(\"S2_MAG_full:\"+S2_MAG_full.count())\n\nS2_MAG_full.write.parquet(\"S2_MAG_full.parquet\")\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-03 16:57:32.535",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "+----------+--------------------+-------------+--------------------+-----------+-------------+----------+\n|   paperId|                 doi|ShortNormName|                name|magAuthorId|AffiliationId|S2AuthorId|\n+----------+--------------------+-------------+--------------------+-----------+-------------+----------+\n|2108090898|10.1001/archderm....|        hwulf| Hans Christian Wulf| 2125892047|         null| 144124874|\n|2108090898|10.1001/archderm....|jsandbymoller|  Jane Sandby-Møller|  118878184|         null|1400169783|\n|2066766585|10.1001/archfami....|       mwalsh|            Walsh Mf| 2696469127|         null|  83374739|\n|2066766585|10.1001/archfami....|       tflynn|            Flynn Tj| 2670089614|         null|  82306506|\n|2089333096|10.1001/archinte....|     mmellody|    Margaret Mellody| 2205486771|         null|   2014709|\n|2089333096|10.1001/archinte....|         rfox|       Ronald E. Fox| 2662954021|         null|  48860117|\n|2089333096|10.1001/archinte....|      gsaxton|    George A. Saxton| 2675388305|         null|  16645608|\n|2089333096|10.1001/archinte....|     hdowling|    Harry F. Dowling| 2309152079|         null|   6846522|\n|2007966712|10.1001/archneur....|       cgoetz|Christopher G. Goetz| 2138522026|   1285301757|  47345936|\n|2114801996|10.1001/archpsyc....|      wcarson|   William H. Carson| 1988766977|         null|   3934710|\n|2114801996|10.1001/archpsyc....|        asaha|           A.R. Saha| 2145938313|         null|  18441577|\n|2114801996|10.1001/archpsyc....|      spotkin|    Steven G. Potkin|  690106878|    204250578|   5360785|\n|2114801996|10.1001/archpsyc....|      smarder|   Stephen R. Marder| 2086980976|         null|   5360785|\n|2114801996|10.1001/archpsyc....|      mkujawa|      Mary J. Kujawa|  738414645|         null|  38298741|\n|2114801996|10.1001/archpsyc....|         mali|           Mirza Ali| 2304656192|         null|  38298741|\n|2114801996|10.1001/archpsyc....|      spotkin|    Steven G. Potkin|  690106878|    204250578|   2213246|\n|2114801996|10.1001/archpsyc....|      smarder|   Stephen R. Marder| 2086980976|         null|   2213246|\n|2114801996|10.1001/archpsyc....|       estock|            E. Stock| 2158921176|         null|   5161921|\n|2114801996|10.1001/archpsyc....|      mkujawa|      Mary J. Kujawa|  738414645|         null|  21261678|\n|2114801996|10.1001/archpsyc....|    gingenito|    Gary G. Ingenito| 2785323673|         null|  50754159|\n|2114801996|10.1001/archpsyc....|jstringfellow| Joseph Stringfellow| 2977680723|         null|   7872482|\n|  12265554|10.1001/archsurg....|       rfeins|    Richard H. Feins| 2189251964|         null|   3231459|\n|  12265554|10.1001/archsurg....| rhendrickson|Richard J. Hendri...| 2601685546|      5388228|   3231459|\n|  12265554|10.1001/archsurg....|       rfeins|    Richard H. Feins| 2189251964|         null|  35148592|\n|  12265554|10.1001/archsurg....| rhendrickson|Richard J. Hendri...| 2601685546|      5388228|  35148592|\n|  12265554|10.1001/archsurg....|   mkillackey|   Mary T. Killackey| 2707655207|         null|   4958044|\n|  12265554|10.1001/archsurg....|   djohnstone|  David W. Johnstone| 2046210776|         null| 153923479|\n|  12265554|10.1001/archsurg....|      twatson|    Thomas J. Watson| 2134795856|         null|  46523757|\n|2003455105|10.1001/archsurg....|     rthirlby|  Richard C. Thirlby|   23307095|         null|   4594239|\n|2003455105|10.1001/archsurg....|        ddail|       David H. Dail| 2659445107|         null|  46899844|\n|2153133099|10.1001/jama.1985...|       aasmal|            Asmal Ac| 2978453631|         null|  66160616|\n|2158898696|10.1001/jama.1986...|   ealexander|        Alexander Er| 2957814782|         null|  66200619|\n|2417129681|10.1001/jama.2010...|       ggorry|            Gorry Ga| 2540348181|         null|1391740665|\n|1976566213|10.1001/jama.228....|        jbarr|             Barr Js| 2708956935|         null|  79980974|\n|3026435627|10.1001/jama.230....|      hhussey|           Hussey Hh| 3027041392|         null|  65817110|\n|2095087162|10.1001/jama.230....|       jbryan|            Bryan Ja| 2333325627|         null|  77575059|\n|2067677845|10.1001/jama.232....|      hhussey|           Hussey Hh| 2539884203|         null|  65817110|\n|2017965359|10.1001/jama.267....|        dbreo|             Breo Dl| 2724031695|         null|  66129894|\n|3021133380|10.1001/jamafacia...|     mroskies|     Michael Roskies| 2906953462|    185261750|   5479788|\n|3021133380|10.1001/jamafacia...|      msamaha|         Mark Samaha| 2601376093|      5023651|   5479788|\n|3021133380|10.1001/jamafacia...|        dchan|       David S. Chan| 2689322041|      5023651| 145695084|\n|3021133380|10.1001/jamafacia...|       ajooya|   Alex Alborz Jooya| 2907837421|      5023651|  66406334|\n|3021133380|10.1001/jamafacia...|      msamaha|         Mark Samaha| 2601376093|      5023651|  46914809|\n|2096930850|10.1001/jamapsych...|       aspohn|      Angelika Spohn| 2561681298|    223822909|   4988189|\n|2096930850|10.1001/jamapsych...|      aschulz|        André Schulz| 2157184975|    186903577|  40602322|\n|2096930850|10.1001/jamapsych...|       agabel|        Andrea Gäbel| 2342209280|    223822909|  40602322|\n|2096930850|10.1001/jamapsych...|   mandermann|    Martin Andermann| 2064182663|    223822909|  32111690|\n|2887955879|10.1002/(sici)109...| acolmenarejo|      A. Colmenarejo| 1908056239|         null|  10195454|\n|3028146569|10.1002/(sici)109...| acolmenarejo|      A. Colmenarejo| 1908056239|         null|  10195454|\n|3027182021|10.1002/(sici)109...| acolmenarejo|      A. Colmenarejo| 1908056239|         null|  10195454|\n+----------+--------------------+-------------+--------------------+-----------+-------------+----------+\nonly showing top 50 rows\n\nJoin_S2_Mag_auth_dois_pubCnt:3373537\nS2_MAG_full:441908883\n\u001b[1m\u001b[34mS2_MAG_dois_df\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [paperId: bigint, doi: string ... 5 more fields]\n\u001b[1m\u001b[34mS2_MAG_full\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [paperId: bigint, doi: string ... 5 more fields]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d68"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d69"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d70"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d71"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601720619084_543825138",
+      "id": "paragraph_1601720619084_543825138",
+      "dateCreated": "2020-10-03 13:23:39.085",
+      "dateStarted": "2020-10-03 16:57:32.538",
+      "dateFinished": "2020-10-03 17:35:43.513",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\nval S2_MAG_dois_df2 \u003d S2_MAG_notJoined_newdois_df\n                   .join(MAGjoindf, S2_MAG_notJoined_newdois_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\")  \u0026\u0026 S2_MAG_notJoined_newdois_df(\"ShortNormName\")\u003d\u003d\u003dMAGjoindf(\"ShortNormName\"), \"inner\")\n                   .select(MAGjoindf(\"paperId\"),MAGjoindf(\"doi\"),  MAGjoindf(\"ShortNormName\"), MAGjoindf(\"name\"), MAGjoindf(\"AuthorId\").as(\"magAuthorId\"), MAGjoindf(\"AffiliationId\"), S2_MAG_notJoined_newdois_df(\"AuthorId\").as(\"S2AuthorId\"))\n                   .persist(StorageLevel.DISK_ONLY)\n  //                 .cache()\n\nS2_MAG_dois_df.show(50)\nprintln(\"Join_S2_Mag_auth_dois_pubCnt:\"+S2_MAG_dois_df.count())\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-03 16:34:38.962",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601732061346_446428510",
+      "id": "paragraph_1601732061346_446428510",
+      "dateCreated": "2020-10-03 16:34:21.346",
+      "status": "READY"
+    },
+    {
+      "text": "%spark\n//println(\"NotJoined_S2_auth_pubCnt:\"+S2_MAG_notJoined_df.count())\n\nval phoneticDF3 \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")), \"inner\")\n                    .select(MAGjoindf(\"paperId\"),MAGjoindf(\"doi\"),  MAGjoindf(\"ShortNormName\"), MAGjoindf(\"name\"), MAGjoindf(\"AuthorId\").as(\"magAuthorId\"), MAGjoindf(\"AffiliationId\"), S2_MAG_notJoined_df(\"AuthorId\").as(\"S2AuthorId\")).cache()\n                    \nprintln(\"Soundex Full:\"+phoneticDF3.count())\nphoneticDF3.show(50)\n\nval phoneticDF4 \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"normname\")), \"inner\")\n                    .select(MAGjoindf(\"paperId\"),MAGjoindf(\"doi\"),  MAGjoindf(\"ShortNormName\"), MAGjoindf(\"name\"), MAGjoindf(\"AuthorId\").as(\"magAuthorId\"), MAGjoindf(\"AffiliationId\"), S2_MAG_notJoined_df(\"AuthorId\").as(\"S2AuthorId\")).cache()\n                    \nprintln(\"Soundex Full norm name:\"+phoneticDF4.count())\nphoneticDF4.show(50)\n\n//s2joinmagfull.show(50)\n//println(\"Join_S2_Mag_auth_pubCnt:\"+s2joinmagfull.count())\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-03 13:39:10.191",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "Soundex Full:7132570\n+-------+--------------------+--------------+---------------------+-----------+-------------+----------+\n|paperId|                 doi| ShortNormName|                 name|magAuthorId|AffiliationId|S2AuthorId|\n+-------+--------------------+--------------+---------------------+-----------+-------------+----------+\n|  69538|                null|     vmiliutin|          Miliutin Vn| 2668719263|         null|  84606026|\n| 272436|                null|    sobzherina|         Obzherina Sv| 2636790184|         null|  81408764|\n| 441947|                null|        fgraca| Elvira da Graça F...| 2113525000|         null| 133889594|\n| 793947|                null|       sprough|            Prough Sg| 2697375414|         null|  81316420|\n|1087376|10.1007/978-4-431...|     hfeussner|    Hubertus Feussner| 1985210738|     62916508|  49993325|\n|1270398|                null|       jnutter|            Nutter Ja| 2669825446|         null|  52587592|\n|1474330|                null|        สอนแบน|         สำรวจ อินแบน| 2918109380|         null| 135141737|\n|1583568|                null|      vfedorov|           Fedorov Vd| 2637951225|         null|  52321453|\n|1734087|                null|  akirchgasner| Adalbert Kirchgäßner| 2629464231|         null|  50760044|\n|1901888| 10.32469/10355/4725|      swonchul|        Won-Chul Shin| 2242249085|         null|   7992787|\n|1972762|                null|     hmollmann|       Helge Möllmann| 2152133533|         null| 152562202|\n|2049210|10.1088/0253-6102...|     wjiaqiang|       Weng Jia-Qiang| 2047598549|     29739308|1409495218|\n|2377107|                null|        jplotz|        Joachim Plötz| 2809297394|         null| 144173775|\n|2635616|10.1007/978-3-322...|     ojacobsen|          Ø. Jacobsen| 2573309892|    173888879|  92207914|\n|2715842|10.1007/978-3-663...|          hlob|            Horst Löb| 2171681068|         null|  92591444|\n|3204350|                null|  kmonkemuller|    Klaus Mönkemüller|  918776031|         null|  47393251|\n|3283910|                null|       csilver|            Silver Ce| 2528862394|         null|  52072419|\n|3329871|10.1016/s0166-111...|         jcall|              Call Jw| 2462720079|    121980950|  74125431|\n|3524502|                null|   윤유상|You-Sang) 윤유상(Yoon| 2658887093|         null| 152349201|\n|3619638|                null|      lfedanov|           Fedanov Lv| 2691116041|         null|  82187567|\n|3642226|                null|         hpeng|              Peng Hc| 2940230065|         null|  52022623|\n|3866895|10.1002/cpt197518165|  jgambertogli|  John G. Gambertogli| 2785104156|    180670191|  14205137|\n|3919374|                null|      alorente| Alfons Crespo i L...| 2142782730|         null| 144031793|\n|4044668|10.3928/1542-8877...|         fhill|              Hill Fd| 2669788117|         null|  79406429|\n|4270522|                null|   srebeschies|      Sven Rebeschieß|  466201809|         null|  66361956|\n|4362717|10.1007/978-3-540...|       kmuller|       Kirsten Müller| 2501450706|         null|  46976416|\n|4449291|                null|   bgeissinger|        Geissinger Bw| 1234984273|     47251452|  79446708|\n|4496426|                null|      nkaemmer|      Norbert Kaemmer| 2435394199|         null|  91077933|\n|4605436|                null|         xchao|              Chao Xr| 2652230312|         null|  82718349|\n|4931667|10.1007/978-3-662...|         wjors|         Wolfram Jörß| 2161827517|         null|  94517526|\n|5035302|10.33588/rn.4507....|        ccosme|  C. de la Cruz Cosme| 2244189112|         null|  82778161|\n|5332745|                null|       jglover|            Glover Js| 2987807902|         null|  65895922|\n|5626862|                null|      hschafer|     Heinrich Schäfer| 2102922258|         null|  80197656|\n|5766521|10.1007/978-3-642...|     janacleto| Junia Coutinho An...| 2153274949|    177909021|   1682317|\n|5801938|                null|     tgerngros|      Tobias Gerngroß|  477754258|         null| 100474829|\n|5966253|                null|        chsiao|             Hsiao Cw| 2554089249|   1296604144|  73825580|\n|6018775|                null|       vdmytro|    V Kalinkin Dmytro| 3007227855|         null| 121052406|\n|6024192|                null|        ccheng|             Cheng Ch| 2685965215|         null|  66061359|\n|6118589|                null|        jmaria|           José María| 2678005206|         null| 116417553|\n|6328159|  10.1007/bf00590320|         hsues|         Hans E. Sueß| 2627199071|    159176309|  47862114|\n|6501929|10.1007/978-3-642...|  kcharltonouw| Kristofer M. Char...|   70240630|     86519309|1397803258|\n|6733322|                null|        dusman|             Usman Ds| 2056161758|         null|  80707735|\n|6817821|                null|      lhoiseth|  Lars Øivind Høiseth| 2093468058|    184942183|1393074212|\n|7079889|                null|     bkirkwood|          Kirkwood Bj| 2722001943|         null|  84492145|\n|7796093|                null|       gvarela|            Varela Gg| 2133370150|         null|  83386284|\n|7904297|                null|       rberger|            Berger Ra| 2537185909|         null|  74229495|\n|8259899|10.33588/rn.4708....|jbarciaalbacar|    Barcia-Albacar Ja| 2678863907|         null|1410451986|\n|8339537|                null|        hworle|             HJ Wörle| 2705156565|         null|  66143459|\n|9323750|                null|      nmankodi|           Mankodi Na| 2683159305|         null|  84459069|\n|9323750|                null|       avaidya|            Vaidya Ab| 2696824617|         null|  66580328|\n+-------+--------------------+--------------+---------------------+-----------+-------------+----------+\nonly showing top 50 rows\n\nSoundex Full norm name:2645730\n+--------+--------------------+----------------+--------------------+-----------+-------------+----------+\n| paperId|                 doi|   ShortNormName|                name|magAuthorId|AffiliationId|S2AuthorId|\n+--------+--------------------+----------------+--------------------+-----------+-------------+----------+\n| 1734087|                null|    akirchgasner|Adalbert Kirchgäßner| 2629464231|         null|  50760044|\n| 1972762|                null|       hmollmann|      Helge Möllmann| 2152133533|         null| 152562202|\n| 2049210|10.1088/0253-6102...|       wjiaqiang|      Weng Jia-Qiang| 2047598549|     29739308|1409495218|\n| 2377107|                null|          jplotz|       Joachim Plötz| 2809297394|         null| 144173775|\n| 2715842|10.1007/978-3-663...|            hlob|           Horst Löb| 2171681068|         null|  92591444|\n| 3204350|                null|    kmonkemuller|   Klaus Mönkemüller|  918776031|         null|  47393251|\n| 3500255|                null|      rmichimuko|         Michimuko R| 1214273295|         null|  15913111|\n| 3866895|10.1002/cpt197518165|    jgambertogli| John G. Gambertogli| 2785104156|    180670191|  14205137|\n| 3919374|                null|        alorente|Alfons Crespo i L...| 2142782730|         null| 144031793|\n| 4270522|                null|     srebeschies|     Sven Rebeschieß|  466201809|         null|  66361956|\n| 4362717|10.1007/978-3-540...|         kmuller|      Kirsten Müller| 2501450706|         null|  46976416|\n| 4496426|                null|        nkaemmer|     Norbert Kaemmer| 2435394199|         null|  91077933|\n| 4931667|10.1007/978-3-662...|           wjors|        Wolfram Jörß| 2161827517|         null|  94517526|\n| 5035302|10.33588/rn.4507....|          ccosme| C. de la Cruz Cosme| 2244189112|         null|  82778161|\n| 5626862|                null|        hschafer|    Heinrich Schäfer| 2102922258|         null|  80197656|\n| 5766521|10.1007/978-3-642...|       janacleto|Junia Coutinho An...| 2153274949|    177909021|   1682317|\n| 5801938|                null|       tgerngros|     Tobias Gerngroß|  477754258|         null| 100474829|\n| 6018775|                null|         vdmytro|   V Kalinkin Dmytro| 3007227855|         null| 121052406|\n| 6118589|                null|          jmaria|          José María| 2678005206|         null| 116417553|\n| 6328159|  10.1007/bf00590320|           hsues|        Hans E. Sueß| 2627199071|    159176309|  47862114|\n| 6501929|10.1007/978-3-642...|    kcharltonouw|Kristofer M. Char...|   70240630|     86519309|1397803258|\n| 6817821|                null|        lhoiseth| Lars Øivind Høiseth| 2093468058|    184942183|1393074212|\n| 8339537|                null|          hworle|            HJ Wörle| 2705156565|         null|  66143459|\n| 9903882|                null|           jshea|         John B.Shea| 2162529677|         null|1418132560|\n| 9926659|                null|              mt|Mogollón Cano-Cor...| 2112143619|         null|  80784158|\n|10432016|                null|              aa|      Ameedeen M. A.| 2894123701|         null|1403873966|\n|10618989|                null|      hkaleagasi|     Hakan Kaleagasi| 2079495926|         null|   4225232|\n|10731186|                null|            skus|       Sebastian Kuß| 2791325630|         null|   6456768|\n|11498021|10.1007/s00508-00...|         byazici|       Burhan Yazici| 2016187559|     76973811|   8220202|\n|11772030|                null|     rlardennois|    Regis_Lardennois|  250020661|         null|  66970235|\n|12425220|                null|         lchenko|   L. I. Omel′chenko| 2549429299|         null|   9483157|\n|12445451|10.1007/978-3-531...|        prossler|     Patrick Rössler| 2486552882|         null|  40547192|\n|12539515|10.1007/978-3-540...|     sclaudibohm|  Simone Claudi-Böhm| 2001422804|         null|1403151593|\n|12761174|                null|    ahofstaetter|  Andrea Hofstaetter| 1938468364|         null|   1925688|\n|12765034|                null|              bv|      Borisova Yu.V.| 2106788443|         null|1403868061|\n|13212487|                null|       rschaefer|       Ralf Schaefer| 2054194129|         null|  38129002|\n|13234281|10.1007/978-3-531...|         sstraus|      Susanne Strauß| 2337209357|         null|  47721866|\n|13451439|10.24310/abm.v26i...|           edana|       Elías D. Dana| 2304177344|         null|  87809348|\n|13680630|10.1007/978-3-642...|jgonzalezbarbosa|Juan Javier Gonzá...| 2139069023|         null|   1808083|\n|13886443|10.1007/978-3-642...|           ajara|     Antonio J. Jara| 2097770307|     80180929|1398022789|\n|13886443|10.1007/978-3-642...|       askarmeta| Antonio F. Skarmeta| 2167418871|     80180929|1398022789|\n|14206223|                null|              ce|         Catania A.E| 2123109545|         null|1460083969|\n|14393884|10.1007/3-7643-73...|         fhauser|        Frank Haußer| 2619545903|         null|  46777926|\n|14569595|                null|        coveroye|Cecilie Schmidt O...| 2491925377|         null|1485892884|\n|15174817|10.1007/978-3-642...|       mschroder|    Michael Schröder| 2098676877|    177802217|  79909855|\n|15227939|10.1055/s-2003-43581|      nsarimurat|     Nüvit Sarımurat|  304109899|         null|   7842011|\n|16879519|10.1007/978-3-663...|         bluthje|          Boy Lüthje| 2484460469|         null|  13688293|\n|16893435|                null|        aakhigbe|          Akhigbe Ao| 2673041739|         null|  82559125|\n|17125513|10.1023/a:1018437...|            bser|    Birgitta Gla¨ser| 2885938526|    161046081|  21648953|\n|18261677|                null|        bdshtein|    B.S. Gol`dshtein| 2503352251|         null|  52356395|\n+--------+--------------------+----------------+--------------------+-----------+-------------+----------+\nonly showing top 50 rows\n\n\u001b[1m\u001b[34mphoneticDF3\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [paperId: bigint, doi: string ... 5 more fields]\n\u001b[1m\u001b[34mphoneticDF4\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [paperId: bigint, doi: string ... 5 more fields]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d64"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d65"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d66"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d67"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601669757962_914118431",
+      "id": "paragraph_1601669757962_914118431",
+      "dateCreated": "2020-10-02 23:15:57.962",
+      "dateStarted": "2020-10-03 13:39:10.194",
+      "dateFinished": "2020-10-03 14:23:10.571",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\n//Try to match some of the un-matched via soundex or edit distance.. \n\n//427933901 matched based on normshortname\n// 49514031 not matched //\n// 45402042\n// 15420540 matched through soundex on short name\n//  1975606 matched through soundex on full name\n//  3143358 edit distance (1)\n//  4373906 combine all above mentioned solutions \n\n/*\nS2_Author_Pub_Cnt:           470388183\nMAG_Author_pubCnt:           655732564\nJoin_S2_Mag_auth_pubCnt:     432097327\n                             441908883\nNotJoined_S2_auth_pubCnt:     45402042\nJoin_S2_Mag_auth_dois_pubCnt:  3357204\ns2joinmagfull:               434546143\nSoundex short:                 2649425\nSoundex Full:                  7132570\neditdistance:                  4032448\n*/\n\nval noMagidsdf \u003d S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") , \"leftanti\")\n.select(lower(S2_MAG_notJoined_df(\"doi\")).as(\"doi\"))\n.distinct()\n.cache()\n\nprintln(\"noMagids found:\"+noMagidsdf.count())\n\n\nval doisjoindf \u003d S2_MAG_notJoined_df.join(noMagidsdf, S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d noMagidsdf(\"doi\") \u0026\u0026 S2_MAG_notJoined_df(\"doi\") \u003d!\u003d \"\" \u0026\u0026 S2_MAG_notJoined_df(\"doi\").isNotNull , \"inner\")\ndoisjoindf.show(100)\nprintln(\"dois based joins:\"+doisjoindf.count())\n\nprintln(\"not matched:\"+S2_MAG_df3.count())\n\n\n\nval phoneticDF \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")), \"inner\")\nprintln(\"Soundex short:\"+phoneticDF.count())\n\nval phoneticDF2 \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")), \"inner\")\nprintln(\"Soundex Full:\"+phoneticDF2.count())\n\nval editdistancedf \u003d S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2, \"inner\")\nprintln(\"editdistance:\"+editdistancedf.count())\n\nval fulljoindf \u003d S2_MAG_notJoined_df.join(MAGjoindf, (S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") || S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") ) \u0026\u0026  (soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n    .persist(StorageLevel.DISK_ONLY)\n    \nprintln(\"fulljoin:\"+fulljoindf.count())\n\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-03 18:35:05.297",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "ERROR",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "\u003cconsole\u003e:34: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val noMagidsdf \u003d S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") , \"leftanti\")\n                        ^\n\u003cconsole\u003e:34: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val noMagidsdf \u003d S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") , \"leftanti\")\n                                                 ^\n\u003cconsole\u003e:34: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val noMagidsdf \u003d S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") , \"leftanti\")\n                                                            ^\n\u003cconsole\u003e:34: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val noMagidsdf \u003d S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") , \"leftanti\")\n                                                                                             ^\n\u003cconsole\u003e:35: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       .select(lower(S2_MAG_notJoined_df(\"doi\")).as(\"doi\"))\n                     ^\n\u003cconsole\u003e:42: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val doisjoindf \u003d S2_MAG_notJoined_df.join(noMagidsdf, S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d noMagidsdf(\"doi\") \u0026\u0026 S2_MAG_notJoined_df(\"doi\") \u003d!\u003d \"\" \u0026\u0026 S2_MAG_notJoined_df(\"doi\").isNotNull , \"inner\")\n                        ^\n\u003cconsole\u003e:42: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val doisjoindf \u003d S2_MAG_notJoined_df.join(noMagidsdf, S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d noMagidsdf(\"doi\") \u0026\u0026 S2_MAG_notJoined_df(\"doi\") \u003d!\u003d \"\" \u0026\u0026 S2_MAG_notJoined_df(\"doi\").isNotNull , \"inner\")\n                                                             ^\n\u003cconsole\u003e:42: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val doisjoindf \u003d S2_MAG_notJoined_df.join(noMagidsdf, S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d noMagidsdf(\"doi\") \u0026\u0026 S2_MAG_notJoined_df(\"doi\") \u003d!\u003d \"\" \u0026\u0026 S2_MAG_notJoined_df(\"doi\").isNotNull , \"inner\")\n                                                                                                                 ^\n\u003cconsole\u003e:42: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val doisjoindf \u003d S2_MAG_notJoined_df.join(noMagidsdf, S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d noMagidsdf(\"doi\") \u0026\u0026 S2_MAG_notJoined_df(\"doi\") \u003d!\u003d \"\" \u0026\u0026 S2_MAG_notJoined_df(\"doi\").isNotNull , \"inner\")\n                                                                                                                                                      ^\n\u003cconsole\u003e:48: \u001b[31merror: \u001b[0mnot found: value S2_MAG_df3\n       println(\"not matched:\"+S2_MAG_df3.count())\n                              ^\n\u003cconsole\u003e:52: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val phoneticDF \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")), \"inner\")\n                         ^\n\u003cconsole\u003e:52: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val phoneticDF \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")), \"inner\")\n                                                  ^\n\u003cconsole\u003e:52: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val phoneticDF \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")), \"inner\")\n                                                             ^\n\u003cconsole\u003e:52: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val phoneticDF \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")), \"inner\")\n                                                                                              ^\n\u003cconsole\u003e:52: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val phoneticDF \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")), \"inner\")\n                                                                                                                                ^\n\u003cconsole\u003e:52: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val phoneticDF \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")), \"inner\")\n                                                                                                                                                                                  ^\n\u003cconsole\u003e:55: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val phoneticDF2 \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")), \"inner\")\n                          ^\n\u003cconsole\u003e:55: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val phoneticDF2 \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")), \"inner\")\n                                                   ^\n\u003cconsole\u003e:55: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val phoneticDF2 \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")), \"inner\")\n                                                              ^\n\u003cconsole\u003e:55: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val phoneticDF2 \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")), \"inner\")\n                                                                                               ^\n\u003cconsole\u003e:55: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val phoneticDF2 \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")), \"inner\")\n                                                                                                                                 ^\n\u003cconsole\u003e:55: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val phoneticDF2 \u003d  S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")), \"inner\")\n                                                                                                                                                                          ^\n\u003cconsole\u003e:58: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val editdistancedf \u003d S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2, \"inner\")\n                            ^\n\u003cconsole\u003e:58: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val editdistancedf \u003d S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2, \"inner\")\n                                                     ^\n\u003cconsole\u003e:58: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val editdistancedf \u003d S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2, \"inner\")\n                                                                ^\n\u003cconsole\u003e:58: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val editdistancedf \u003d S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2, \"inner\")\n                                                                                                 ^\n\u003cconsole\u003e:58: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val editdistancedf \u003d S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2, \"inner\")\n                                                                                                                                       ^\n\u003cconsole\u003e:58: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val editdistancedf \u003d S2_MAG_notJoined_df.join(MAGjoindf, S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2, \"inner\")\n                                                                                                                                                                              ^\n\u003cconsole\u003e:61: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val fulljoindf \u003d S2_MAG_notJoined_df.join(MAGjoindf, (S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") || S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") ) \u0026\u0026  (soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n                        ^\n\u003cconsole\u003e:61: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val fulljoindf \u003d S2_MAG_notJoined_df.join(MAGjoindf, (S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") || S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") ) \u0026\u0026  (soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n                                                 ^\n\u003cconsole\u003e:61: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val fulljoindf \u003d S2_MAG_notJoined_df.join(MAGjoindf, (S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") || S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") ) \u0026\u0026  (soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n                                                             ^\n\u003cconsole\u003e:61: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val fulljoindf \u003d S2_MAG_notJoined_df.join(MAGjoindf, (S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") || S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") ) \u0026\u0026  (soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n                                                                                              ^\n\u003cconsole\u003e:61: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val fulljoindf \u003d S2_MAG_notJoined_df.join(MAGjoindf, (S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") || S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") ) \u0026\u0026  (soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n                                                                                                                      ^\n\u003cconsole\u003e:61: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val fulljoindf \u003d S2_MAG_notJoined_df.join(MAGjoindf, (S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") || S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") ) \u0026\u0026  (soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n                                                                                                                                                     ^\n\u003cconsole\u003e:61: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val fulljoindf \u003d S2_MAG_notJoined_df.join(MAGjoindf, (S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") || S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") ) \u0026\u0026  (soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n                                                                                                                                                                                      ^\n\u003cconsole\u003e:61: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val fulljoindf \u003d S2_MAG_notJoined_df.join(MAGjoindf, (S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") || S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") ) \u0026\u0026  (soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n                                                                                                                                                                                                                                        ^\n\u003cconsole\u003e:61: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val fulljoindf \u003d S2_MAG_notJoined_df.join(MAGjoindf, (S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") || S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") ) \u0026\u0026  (soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n                                                                                                                                                                                                                                                                                ^\n\u003cconsole\u003e:61: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val fulljoindf \u003d S2_MAG_notJoined_df.join(MAGjoindf, (S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") || S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") ) \u0026\u0026  (soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n                                                                                                                                                                                                                                                                                                                         ^\n\u003cconsole\u003e:61: \u001b[31merror: \u001b[0mnot found: value S2_MAG_notJoined_df\n       val fulljoindf \u003d S2_MAG_notJoined_df.join(MAGjoindf, (S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") || S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") ) \u0026\u0026  (soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n                                                                                                                                                                                                                                                                                                                                                            ^\n\u003cconsole\u003e:61: \u001b[31merror: \u001b[0mnot found: value MAGjoindf\n       val fulljoindf \u003d S2_MAG_notJoined_df.join(MAGjoindf, (S2_MAG_notJoined_df(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") || S2_MAG_notJoined_df(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") ) \u0026\u0026  (soundex (S2_MAG_notJoined_df(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_notJoined_df(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_notJoined_df(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n                                                                                                                                                                                                                                                                                                                                                                                                   ^\n\u003cconsole\u003e:62: \u001b[31merror: \u001b[0mnot found: value StorageLevel\n           .persist(StorageLevel.DISK_ONLY)\n                    ^\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601460940914_1598812934",
+      "id": "paragraph_1601460940914_1598812934",
+      "dateCreated": "2020-09-30 13:15:40.914",
+      "dateStarted": "2020-10-02 23:15:04.978",
+      "dateFinished": "2020-10-02 23:15:12.659",
+      "status": "ERROR"
+    },
+    {
+      "text": "%spark\nval fulljoindfmagid \u003d S2_MAG_df3.join(MAGjoindf, S2_MAG_df3(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  (soundex (S2_MAG_df3(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_df3(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_df3(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n    .persist(StorageLevel.DISK_ONLY)\n    \nprintln(\"fulljoin:\"+fulljoindfmagid.count())",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-02 12:01:33.696",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "fulljoin:4373906\n\u001b[1m\u001b[34mfulljoindfmagid\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [id: string, doi: string ... 12 more fields]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d56"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601629230968_167499408",
+      "id": "paragraph_1601629230968_167499408",
+      "dateCreated": "2020-10-02 12:00:30.968",
+      "dateStarted": "2020-10-02 12:01:33.698",
+      "dateFinished": "2020-10-02 12:34:59.506",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\nval fulljoindfdoi \u003d S2_MAG_df3.join(MAGjoindf, S2_MAG_df3(\"doi\") \u003d\u003d\u003d MAGjoindf(\"doi\") \u0026\u0026  (soundex (S2_MAG_df3(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_MAG_df3(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_MAG_df3(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n    .persist(StorageLevel.DISK_ONLY)\n    \nprintln(\"fulljoin:\"+fulljoindfdoi.count())",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-02 13:26:27.334",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "fulljoin:11036076\n\u001b[1m\u001b[34mfulljoindfdoi\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [id: string, doi: string ... 12 more fields]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d58"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601629296608_719355172",
+      "id": "paragraph_1601629296608_719355172",
+      "dateCreated": "2020-10-02 12:01:36.608",
+      "dateStarted": "2020-10-02 13:26:27.336",
+      "dateFinished": "2020-10-02 13:54:15.694",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\n// match all \nval s2joinmagfull \u003d  fulljoindfmagid.union(fulljoindfdoi)\n                    .dropDuplicates()\n                    .persist(StorageLevel.DISK_ONLY)\n                    \nprintln(\"s2joinmagfull:\"+s2joinmagfull.count())",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-02 14:39:41.936",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "s2joinmagfull:13475258\n\u001b[1m\u001b[34ms2joinmagfull\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [id: string, doi: string ... 12 more fields]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d59"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601629349294_994007709",
+      "id": "paragraph_1601629349294_994007709",
+      "dateCreated": "2020-10-02 12:02:29.294",
+      "dateStarted": "2020-10-02 14:39:41.939",
+      "dateFinished": "2020-10-02 14:40:15.637",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\nval ACM_HOME \u003d \"/home/ometaxas/Datasets/ACM\"\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\n\nval ACMmatchedAuthorsSchema \u003d new StructType().\n                add(\"doi\", StringType, false).\n                add(\"pMAG_Id\", LongType, false).                \n                add(\"pS2_Id\", StringType, true).\n                add(\"AuthorName\",StringType, true).\n                add(\"aMAG_Id\", LongType, true).\n                add(\"aS2_Id\", StringType, true)\n\n                \nval ACMmatchedAuthorsdf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(ACMmatchedAuthorsSchema).\n                csv(s\"file://$ACM_HOME/acm.pubs.all.tsv\")\n                \n\n//ACMmatchedAuthorsdf.show(50)\n//println(ACMmatchedAuthorsdf.count())\n\nval doisdf \u003d ACMmatchedAuthorsdf.select(lower(ACMmatchedAuthorsdf(\"doi\")).as(\"doi\"))\n.distinct()\n//.limit(10000)\n  .persist(StorageLevel.DISK_ONLY)\n\ndoisdf.show(false)\nprintln(\"DOIs cnt:\" + doisdf.count())\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-01 09:20:19.879",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "+------------------------------------------------------------+\n|doi                                                         |\n+------------------------------------------------------------+\n|10.1002/1097-024x(20001125)30:14\u003c1531::aid-spe347\u003e3.0.co;2-a|\n|10.1002/acs.2651                                            |\n|10.1002/acs.4480070602                                      |\n|10.1002/acs.4480090504                                      |\n|10.1002/asi.10295                                           |\n|10.1002/asi.20013                                           |\n|10.1002/asi.20571                                           |\n|10.1002/asi.21580                                           |\n|10.1002/asi.23100                                           |\n|10.1002/asi.23633                                           |\n|10.1002/asjc.975                                            |\n|10.1002/bltj.20487                                          |\n|10.1002/bltj.20493                                          |\n|10.1002/cav.1529                                            |\n|10.1002/cav.1613                                            |\n|10.1002/cav.402                                             |\n|10.1002/cav.424                                             |\n|10.1002/cpe.1631                                            |\n|10.1002/cpe.3065                                            |\n|10.1002/cpe.3078                                            |\n+------------------------------------------------------------+\nonly showing top 20 rows\n\nDOIs cnt:1661856\n\u001b[1m\u001b[34mACM_HOME\u001b[0m: \u001b[1m\u001b[32mString\u001b[0m \u003d /home/ometaxas/Datasets/ACM\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger\nimport org.slf4j.LoggerFactory\nimport org.apache.spark.sql.functions.concat_ws\nimport org.apache.spark.sql.functions.countDistinct\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer\nimport java.util.Locale\nimport org.apache.spark.storage.StorageLevel\n\u001b[1m\u001b[34mACMmatchedAuthorsSchema\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.types.StructType\u001b[0m \u003d StructType(StructField(doi,StringType,false), StructField(pMAG_Id,LongType,false), StructField(pS2_Id,StringType,true), StructField(AuthorName,StringType,true), StructField(aMAG_Id,LongType,true), StructField(aS2_Id,StringTy...\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d0"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d1"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601531027478_1034781328",
+      "id": "paragraph_1601531027478_1034781328",
+      "dateCreated": "2020-10-01 08:43:47.478",
+      "dateStarted": "2020-10-01 09:20:19.881",
+      "dateFinished": "2020-10-01 09:20:31.647",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\ns2joinmagfull\n//.select(MAGjoindf(\"paperId\"),MAGjoindf(\"doi\"),  MAGjoindf(\"ShortNormName\"), MAGjoindf(\"name\"), MAGjoindf(\"AuthorId\").as(\"magAuthorId\"), MAGjoindf(\"AffiliationId\"), S2_Pub_Authors(\"AuthorId\").as(\"S2AuthorId\"))\n.show(25)\n\n//S2_MAG_df2.show(1)\n\n/*\nval s2joinmagalldf \u003d  s2joinmagfull.union(S2_MAG_df2)\n                    .dropDuplicates()\n                    .persist(StorageLevel.DISK_ONLY)\n                    \nprintln(\"s2joinmagall:\"+s2joinmagalldf.count())\n*/",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-02 15:39:12.389",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "+--------------------+--------------------+----------+--------+--------------------+----------+----------------+----------+--------------------+--------------------+--------------------+-----------------+----------+-------------+\n|                  id|                 doi|     magId|    pmid|                name|  authorId|   shortNormName|   paperId|                 doi|                name|            normname|    ShortNormName|  AuthorId|AffiliationId|\n+--------------------+--------------------+----------+--------+--------------------+----------+----------------+----------+--------------------+--------------------+--------------------+-----------------+----------+-------------+\n|686274dce844d06f5...|                    |  55427496|22613556|               Qi Wu| 144663764|             qwu|  55427496|                null|          Junping Wu|          junping wu|              jwu|2239431201|         null|\n|b2b0cc8c83a6ceacd...|10.1007/978-3-663...| 112520518|        |         Volker Hess| 134836824|           vhess| 112520518|10.1007/978-3-663...|          Volker Heß|          volker hes|             vheß|2485617947|         null|\n|ecaaf44a460c27547...|                    | 161515887| 2326547|     Zhong-cheng Guo|  49694677|            zguo| 161515887|                null|            Zhang Ky|           k y zhang|              zky|2647122697|         null|\n|3bcd1b29a77ff1cb7...|                    | 269437422|        |      Michael Gaedke|  98782860|         mgaedke| 269437422|                null|            M. Gädke|             m gadke|           mgadke|1928195657|         null|\n|36a350eec610f0927...|10.1007/978-3-319...| 354106010|        |        Muhsin Kılıç|  38124438|          mkılıc| 354106010|10.1007/978-3-319...|        Muhsin Kilic|        muhsin kilic|           mkilic|2101059175|    131835042|\n|b60e899d544c9d4c0...|                    | 623378929|        |Zulia Mayari Sanc...|1422161721|  zsanchez‐mejia| 623378929|                null|Zulia Mayari Sanc...|zulia mayari sanc...|    zsanchezmejia|1246990346|         null|\n|1e95775e20f8a1821...|                    | 779091896|        |  Clarence S. Thomas|  49064519|         cthomas| 779091896|                null|Clarence S. Thoma...|   clarence s thomas|              cjr|2638910379|         null|\n|0f989a1698ff6a5f0...|10.1016/B978-0123...| 965609327|        |      Bent. Sorensen| 143606358|       bsorensen| 965609327|10.1016/b978-0123...|       Bent Sørensen|       bent sorensen|        bsørensen|2262909319|    107707843|\n|cad7fa65605358ec7...|                    |1543493577|        |    Frieder Knüpling| 103303533|       fknupling|1543493577|                null|   Frieder Knuepling|   frieder knuepling|       fknuepling|2300280165|         null|\n|ca940d0fa3de1fba4...|10.1097/00005768-...|1601801744| 8897385| Michael A. Ferguson| 152966149|       mferguson|1601801744|                null|            Ferguson|            ferguson|         ferguson|2740335343|         null|\n|0ac266561144fa40a...|10.1353/pew.2015....|1671924815|        |          Weimin Lin|  49661139|            wlin|1671924815|10.1353/pew.2015....|          Chiulo Lin|          chiulo lin|             clin|2565907122|    169090423|\n|8b7dff635a2b08788...|10.1103/PhysRevD....|1695701011|        |     Andreas Hoecker|  66701971|        ahoecker|1695701011|10.1103/physrevd....|     Andrei Salnikov|        a a salnikov|        asalnikov|2086713062|     97018004|\n|d6ad01ce2ecf50fee...|10.1016/j.patrec....|1844422699|        |W. Gareth J. Howells|   3470463|        whowells|1844422699|10.1016/j.patrec....|      Gareth Howells|      gareth howells|         ghowells|2273436352|     20581793|\n|dbf2e2df346715a0a...|10.1002/978047057...|1882356037|        |     Dvm David Hutto|  87077068|          dhutto|1882356037|10.1002/978047057...| Dvm David Hutto PhD|     dvm david hutto|             dphd|2577984534|   1297540436|\n|d4684297c22f72d52...|10.1103/PhysRevE....|1965273872| 9965738|           Bagarinao|  29938518|       bagarinao|1965273872|10.1103/physreve....|  Epifanio Bagarinao|  epifanio bagarinao|       ebagarinao|2231122854|         null|\n|8452bd65af8f913c4...|10.1103/PhysRevLe...|1977831357|10057502|               Weber| 120515553|           weber|1977831357|10.1103/physrevle...|       Andreas Weber|       andreas weber|           aweber|2963127597|     54009628|\n|45b5de16bfcd40954...|10.1103/PhysRevLe...|1980260516|10040111|           Cernogora|  30032514|       cernogora|1980260516|10.1103/physrevle...|        J. Cernogora|         j cernogora|       jcernogora|2599209581|         null|\n|40a21d22742ab11ad...|10.1103/PhysRevLe...|1984260988|10053967|            Auerbach| 108358561|        auerbach|1984260988|10.1103/physrevle...|       Assa Auerbach|       assa auerbach|        aauerbach|2122939012|    174306211|\n|fcb12191ddb474c83...|10.1006/jcis.1998...|1988672081| 9792778|              McGown|  29959123|          mcgown|1988672081|10.1006/jcis.1998...|     Linda B. McGown|      linda b mcgown|          lmcgown| 316262170|    170897317|\n|9b9bf755714fa9c11...|    10.1063/1.349857|1992039434|        | E. Olivier-Rulliere|1405713707|eolivierrulliere|1992039434|    10.1063/1.349857|Elisabeth Olivier...|elisabeth olivier...|eolivier‐rulliere|2657190994|         null|\n|5483c36fbc656b772...|10.3138/jsp.46.1.004|1996867325|        |Elea Sylvia Carlo...|1484399796| efernandezgomez|1996867325|10.3138/jsp.46.1.004|Sylvia Fernández-...|sylvia fernandezg...|  sfernandezgomez|2300695193|         null|\n|92dc6da072c7e2ba6...|10.1353/trn.2008....|2003932494|        |Janine Imraan Buccus|1466216610|         jbuccus|2003932494|10.1353/trn.2008....|       Imraan Buccus|       imraan buccus|          ibuccus|  28214805|         null|\n|f039b57cb08644262...|      10.1086/377628|2004520713|        |Edward W. Kolb Th...| 121784637|   eastrophysics|2004520713|      10.1086/377628|      Edward W. Kolb|       edward w kolb|            ekolb|2428728706|   1314696892|\n|36d923e0893277e7c...|   10.1021/ma047944j|2004625142|        |     and Kinji Asaka|  92542515|          aasaka|2004625142|   10.1021/ma047944j|         Kinji Asaka|         kinji asaka|           kasaka|2024700732|         null|\n|683617d38121035bc...|10.4067/S0034-988...|2005426124|        |      Ignacio Robles| 145522452|         irobles|2005426124|10.4067/s0034-988...|    Ignacio Robles G|    ignacio robles g|               ig|2132163357|     69737025|\n+--------------------+--------------------+----------+--------+--------------------+----------+----------------+----------+--------------------+--------------------+--------------------+-----------------+----------+-------------+\nonly showing top 25 rows\n\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d62"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601641938008_1865988005",
+      "id": "paragraph_1601641938008_1865988005",
+      "dateCreated": "2020-10-02 15:32:18.008",
+      "dateStarted": "2020-10-02 15:39:12.391",
+      "dateFinished": "2020-10-02 15:39:12.533",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\n\n\nval editdistancedf \u003d MAGjoindf.join(S2_MAG_df3, S2_Pub_Authors(\"magId\") \u003d\u003d\u003d MAGjoindf(\"paperId\") \u0026\u0026  (soundex (S2_Pub_Authors(\"ShortNormName\"))\u003d\u003d\u003d soundex (MAGjoindf(\"ShortNormName\")) || soundex (S2_Pub_Authors(\"name\"))\u003d\u003d\u003d soundex (MAGjoindf(\"name\")) || levenshtein (S2_Pub_Authors(\"ShortNormName\") , MAGjoindf(\"ShortNormName\"))\u003c2), \"inner\")\n\nprintln(\"Join_S2_Mag_auth_pubCnt:\"+editdistancedf.count())\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-02 10:06:07.386",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "Join_S2_Mag_auth_pubCnt:4373906\n\u001b[1m\u001b[34meditdistancedf\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m \u003d [paperId: bigint, doi: string ... 12 more fields]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d18"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601556603041_1925726302",
+      "id": "paragraph_1601556603041_1925726302",
+      "dateCreated": "2020-10-01 15:50:03.041",
+      "dateStarted": "2020-10-02 10:06:07.387",
+      "dateFinished": "2020-10-02 10:13:15.963",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\n\n// match all \nval s2joinmagfull \u003d  S2_MAG_df2.union(editdistancedf)\n                    .persist(StorageLevel.DISK_ONLY)\n                    \nprintln(\"Join_S2_Mag_auth_pubCnt:\"+s2joinmagfull.count())",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-02 10:13:19.286",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601622510853_1505588448",
+      "id": "paragraph_1601622510853_1505588448",
+      "dateCreated": "2020-10-02 10:08:30.853",
+      "status": "READY"
+    },
+    {
+      "text": "%spark\n// analyze some of the un-matched cases\n\nval ids \u003d Seq(\"2518571613\", \"2529723892\", \"2042143866\", \"2077766785\", \"2473041474\", \"2550963539\",\"2098888151\", \"2949123828\",\"2583977787\", \"2784602620\",\"2081222428\", \"2018853037\", \"2143496959\", \"2098691264\")\n\nval S2_not_Matched \u003d MAGjoindf.filter($\"paperId\".isin(ids:_*)).orderBy($\"paperId\")\nS2_not_Matched.show(100)\n\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-10-01 13:50:05.402",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "+----------+--------------------+--------------------+--------------------+----------------+----------+-------------+\n|   paperId|                 doi|                name|            normname|   ShortNormName|  AuthorId|AffiliationId|\n+----------+--------------------+--------------------+--------------------+----------------+----------+-------------+\n|2018853037|10.1016/s1389-128...|         C. Siguenza|          c siguenza|       csiguenza|2986599726|      6289922|\n|2018853037|10.1016/s1389-128...|          P. Marinño|           p marinno|        pmarinno|2559099032|      6289922|\n|2018853037|10.1016/s1389-128...|    Juan B. Nogueira|       juan nogueira|       jnogueira|3037395127|      6289922|\n|2018853037|10.1016/s1389-128...|Miguel Angel Domí...|       m a dominguez|      mdominguez|2111628287|      6289922|\n|2018853037|10.1016/s1389-128...|      Francisco Poza|              f poza|           fpoza|2071753962|      6289922|\n|2042143866|   10.1109/12.895937|           Chia Shen|           chia shen|           cshen|2136381082|   1306287861|\n|2042143866|   10.1109/12.895937|         I. Mizumuma|          i mizumuma|       imizumuma|2228137705|     39854257|\n|2077766785|10.1016/j.cviu.20...|          Yanwen Guo|          yanwen guo|            yguo|2141676470|    881766915|\n|2077766785|10.1016/j.cviu.20...|        Mingming Liu|        mingming liu|            mliu|2656093259|    881766915|\n|2077766785|10.1016/j.cviu.20...|          Luo Weitao|          weitao luo|         lweitao|2582966834|    881766915|\n|2077766785|10.1016/j.cviu.20...|              Ang Li|              ang li|             ali|2285423557|     66946132|\n|2077766785|10.1016/j.cviu.20...|           Feng Tang|           feng tang|           ftang|2491442529|   1324840837|\n|2077766785|10.1016/j.cviu.20...|             Ye Chen|             ye chen|           ychen|2661131287|    881766915|\n|2081222428|10.1145/505388.50...|       Chin-Chi Teng|        chinchi teng|           cteng|2641215923|         null|\n|2081222428|10.1145/505388.50...|        Pinhong Chen|        pinhong chen|           pchen|2103053436|     95457486|\n|2081222428|10.1145/505388.50...|       Yuji Kukimoto|       yuji kukimoto|       ykukimoto|2684708411|         null|\n|2081222428|10.1145/505388.50...|        Kurt Keutzer|        kurt keutzer|        kkeutzer|2003317548|     95457486|\n|2098691264|10.1109/tsp.2011....|       Jesper Jensen|       jesper jensen|         jjensen|2159938070|         null|\n|2098691264|10.1109/tsp.2011....|      Jan Ostergaard|      jan ostergaard|     jostergaard|2099826860|    891191580|\n|2098691264|10.1109/tsp.2011....|   Daniel E. Quevedo|    daniel e quevedo|        dquevedo|2103652929|     78757542|\n|2098888151|10.1162/106365603...|Josep M. Garrell-...| josep m garrellguiu|    jgarrellguiu| 615059515|      5593406|\n|2098888151|10.1162/106365603...|Ester Bernadó-Man...|ester bernadomans...|ebernadomansilla|  36755269|   1322087612|\n|2143496959|10.1145/775832.77...|       Heinrich Meyr|              h meyr|           hmeyr| 173812341|    887968799|\n|2143496959|10.1145/775832.77...|        Gunnar Braun|        gunnar braun|          gbraun|2125485382|         null|\n|2143496959|10.1145/775832.77...|      Rainer Leupers|      rainer leupers|        rleupers|2312083858|    887968799|\n|2143496959|10.1145/775832.77...|     Andreas Andreas|     andreas andreas|        aandreas|2698662730|         null|\n|2143496959|10.1145/775832.77...|          Achim Nohl|          achim nohl|           anohl|2103766045|         null|\n|2143496959|10.1145/775832.77...|       Volker Greive|       volker greive|         vgreive|1016711326|         null|\n|2143496959|10.1145/775832.77...|  Oliver Schliebusch|  oliver schliebusch|    oschliebusch|1216535746|    887968799|\n|2518571613|10.4018/ijide.201...|    Fatmanur Kasarcı|    fatmanur kasarci|        fkasarcı|2509711488|         null|\n|2518571613|10.4018/ijide.201...|  Bryan Christiansen|  bryan christiansen|   bchristiansen|2571265296|         null|\n|2529723892|10.5220/000491940...|Christophe Sibert...|christophe sibert...|  csibertinblanc| 206472034|     17866349|\n|2529723892|10.5220/000491940...|       Terán Oswaldo|       teran oswaldo|        toswaldo|2527944821|    162096671|\n|2529723892|10.5220/000491940...|       Benoit Gaudou|       benoit gaudou|         bgaudou|  39594351|     17866349|\n|2550963539|10.1504/ijbis.201...|    Mofleh Al Diabat|    mofleh al diabat|         mdiabat|2586294634|     31079310|\n|2550963539|10.1504/ijbis.201...|         Ali Alawneh|         ali alawneh|        aalawneh|2097926742|    153921779|\n+----------+--------------------+--------------------+--------------------+----------------+----------+-------------+\n\n\u001b[1m\u001b[34mids\u001b[0m: \u001b[1m\u001b[32mSeq[String]\u001b[0m \u003d List(2518571613, 2529723892, 2042143866, 2077766785, 2473041474, 2550963539, 2098888151, 2949123828, 2583977787, 2784602620, 2081222428, 2018853037, 2143496959, 2098691264)\n\u001b[1m\u001b[34mS2_not_Matched\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [paperId: bigint, doi: string ... 5 more fields]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d16"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601451957067_1094676625",
+      "id": "paragraph_1601451957067_1094676625",
+      "dateCreated": "2020-09-30 10:45:57.067",
+      "dateStarted": "2020-09-30 18:29:09.554",
+      "dateFinished": "2020-09-30 18:29:09.940",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\n//Enrich with FoSList(set), coAuthorsList(set)\n\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-09-29 16:45:31.484",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601386513473_2614105",
+      "id": "paragraph_1601386513473_2614105",
+      "dateCreated": "2020-09-29 16:35:13.473",
+      "status": "READY"
+    },
+    {
+      "text": "%spark\n//Author Name Normalization tests \n\n\nimport com.github.mrpowers.spark.stringmetric.SimilarityFunctions._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport java.util.Locale;\nimport org.apache.spark.sql.functions._\n\nval a \u003d 100\nprintln(a)\n\ndef unaccent2(e: String): String \u003d {\n  val normname \u003d org.apache.commons.lang3.StringUtils\n    .stripAccents(e.toLowerCase(Locale.ENGLISH))\n    .replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n    .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n    .trim()\n    .split(\" \")\n\n  val shortName \u003d\n    if (normname.length \u003d\u003d 1) normname(0)\n    else normname(0).take(1) + normname(normname.length - 1)\n  return shortName\n}\n\ndef unaccent3(e: String): String \u003d {\n  val normname \u003d \n  //e\n  org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n     //.replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n    .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n    .trim()\n    .split(\" \")\n\n  val shortName \u003d\n    if (normname.length \u003d\u003d 1) normname(0)\n    else normname(0).take(1) + normname(normname.length - 1)\n  return shortName\n}\n\n/*\n\nval actualDF \u003d sourceDF.withColumn(\n  \"name1_name2_soundex_equality\",\n  soundex(col(\"M. Größler\")) \u003d\u003d\u003d soundex(col(\"m groβler\"))\n)\n\nactualDF.show()\n\nprintln(\"chinese:\"+ unaccent2(\"福村 健\"))\n\nprintln(unaccent3(\"omiros K metaxas\"))\n\n\nprintln(unaccent3(\"M. Größler\"))\nprintln(unaccent3(\"m groβler\"))\n\n\n\nprintln(unaccent3(\" 山下 弘子\"))\n\nprintln(unaccent3(\"淳夫 三輪\"))\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-09-30 14:38:18.100",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "ERROR",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "\u003cconsole\u003e:75: \u001b[31merror: \u001b[0mnot found: value sourceDF\n       val actualDF \u003d sourceDF.withColumn(\n                      ^\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601384584554_1638316922",
+      "id": "paragraph_1601384584554_1638316922",
+      "dateCreated": "2020-09-29 16:03:04.554",
+      "dateStarted": "2020-09-30 14:35:14.074",
+      "dateFinished": "2020-09-30 14:35:14.120",
+      "status": "ERROR"
+    },
+    {
+      "text": "%spark\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-09-30 11:19:50.200",
+      "config": {},
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1601453990200_1092670912",
+      "id": "paragraph_1601453990200_1092670912",
+      "dateCreated": "2020-09-30 11:19:50.200",
+      "status": "READY"
+    }
+  ],
+  "name": "Entity Disambiguation",
+  "id": "2FPC2662Z",
+  "defaultInterpreterGroup": "spark",
+  "version": "0.9.0-preview2",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
+  "config": {
+    "isZeppelinNotebookCronEnable": false
+  },
+  "info": {}
+}
