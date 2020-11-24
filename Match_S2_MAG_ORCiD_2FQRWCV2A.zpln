@@ -1,9 +1,9 @@
 {
   "paragraphs": [
     {
-      "text": "%spark.conf\n\n# It is strongly recommended to set SPARK_HOME explictly instead of using the embedded spark of Zeppelin. As the function of embedded spark of Zeppelin is limited and can only run in local mode.\nSPARK_HOME /home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2\n\nspark.jars /home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2/plugins/rapids-4-spark_2.12-0.2.0.jar,/home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2/plugins/cudf-0.15-cuda10-1.jar\n\n# set driver memory to 4g\nspark.driver.memory 100g\nspark.driver.maxResultSize 15g \n\nspark.rapids.sql.concurrentGpuTasks\u003d1\nspark.rapids.sql.enabled true\nspark.rapids.memory.pinnedPool.size 2G \nspark.plugins com.nvidia.spark.SQLPlugin \n\n#spark.locality.wait 0s \n#spark.sql.files.maxPartitionBytes 512m \n#spark.sql.shuffle.partitions 10 \n\n\nSPARK_LOCAL_DIRS /home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2/tmp\n#,/media/datadisk/Datasets/Spark \n#/media/datadisk/Datasets/Spark\n\n# set executor memrory 110g\n# spark.executor.memory  60g\n\n\n# set executor number to be 6\n# spark.executor.instances  6\n\n\n# Uncomment the following line if you want to use yarn-cluster mode (It is recommended to use yarn-cluster mode after Zeppelin 0.8, as the driver will run on the remote host of yarn cluster which can mitigate memory pressure of zeppelin server)\n# master yarn-cluster\n\n# Uncomment the following line if you want to use yarn-client mode (It is not recommended to use it after 0.8. Because it would launch the driver in the same host of zeppelin server which will increase memory pressure of zeppelin server)\n# master yarn-client\n\n# Uncomment the following line to enable HiveContext, and also put hive-site.xml under SPARK_CONF_DIR\n# zeppelin.spark.useHiveContext true",
+      "text": "%spark.conf\n\n# It is strongly recommended to set SPARK_HOME explictly instead of using the embedded spark of Zeppelin. As the function of embedded spark of Zeppelin is limited and can only run in local mode.\nSPARK_HOME /home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2\n\nspark.jars /home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2/plugins/rapids-4-spark_2.12-0.2.0.jar,/home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2/plugins/cudf-0.15-cuda10-1.jar\n\n# set driver memory to 4g\nspark.driver.memory 100g\nspark.driver.maxResultSize 15g \n\n#spark.rapids.sql.concurrentGpuTasks\u003d1\n#spark.rapids.sql.enabled true\n#spark.rapids.memory.pinnedPool.size 2G \n#spark.plugins com.nvidia.spark.SQLPlugin \n\n#spark.locality.wait 0s \n#spark.sql.files.maxPartitionBytes 512m \n#spark.sql.shuffle.partitions 10 \n\n\nSPARK_LOCAL_DIRS /home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2/tmp\n#,/media/datadisk/Datasets/Spark \n#/media/datadisk/Datasets/Spark\n\n# set executor memrory 110g\n# spark.executor.memory  60g\n\n\n# set executor number to be 6\n# spark.executor.instances  6\n\n\n# Uncomment the following line if you want to use yarn-cluster mode (It is recommended to use yarn-cluster mode after Zeppelin 0.8, as the driver will run on the remote host of yarn cluster which can mitigate memory pressure of zeppelin server)\n# master yarn-cluster\n\n# Uncomment the following line if you want to use yarn-client mode (It is not recommended to use it after 0.8. Because it would launch the driver in the same host of zeppelin server which will increase memory pressure of zeppelin server)\n# master yarn-client\n\n# Uncomment the following line to enable HiveContext, and also put hive-site.xml under SPARK_CONF_DIR\n# zeppelin.spark.useHiveContext true",
       "user": "anonymous",
-      "dateUpdated": "2020-11-22 12:38:53.900",
+      "dateUpdated": "2020-11-23 20:34:52.919",
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -31,28 +31,28 @@
       "jobName": "paragraph_1605800359478_1421580216",
       "id": "paragraph_1605800359478_1421580216",
       "dateCreated": "2020-11-19 17:39:19.478",
-      "dateStarted": "2020-11-22 12:38:53.904",
-      "dateFinished": "2020-11-22 12:38:53.911",
+      "dateStarted": "2020-11-23 20:34:52.922",
+      "dateFinished": "2020-11-23 20:34:52.925",
       "status": "FINISHED"
     },
     {
       "title": "Pre-process S2 data ",
       "text": "%spark\nval S2_HOME \u003d \"/media/datadisk/Datasets/SemanticScholar/06112020\"\nval S2_sample \u003d \"/media/datadisk/Datasets/SemanticScholar/sample/sample-S2-records.gz\"\nimport com.github.mrpowers.spark.stringmetric.SimilarityFunctions._\nimport com.github.mrpowers.spark.stringmetric.PhoneticAlgorithms._\n\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\nimport  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\n\n\nval unaccent2 \u003d udf[String, String]((e:String) \u003d\u003e {\n    \n    val normname \u003d org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    //.replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n    .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n\t\t\t\t.trim().split(\" \")\n    \n\n val shortName \u003d  if (normname.length \u003d\u003d 1) normname(0) else normname(0).take(1) + normname(normname.length-1)\n shortName\n\n    \n})\n\nval fulltrim \u003d udf[String, String]((e:String) \u003d\u003e {\n    \n org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    .replaceAll(\"[ \u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n\t\t\t\t.trim()\n    \n})\n\nval logger: Logger \u003d LoggerFactory.getLogger(\"MyZeppelinLogger\");\nlogger.info(\"Test my logger\");\n\n\n//Get Semantic Scholar articles \nval S2articlesdf \u003d spark.read.json(s\"file://$S2_HOME\")\n//val S2articlesdf \u003d spark.read.json(s\"file://$S2_sample\")\n//S2articlesdf.printSchema\n//S2articlesdf.show(5) \n\nval S2subsetdf \u003d S2articlesdf\n             //.join(broadcast(doisdf), lower(S2articlesdf(\"doi\"))\u003d\u003d\u003ddoisdf(\"doi\"), \"inner\")\n             //.filter(($\"magId\" \u003d!\u003d \"\") \u0026\u0026 ($\"magId\".isNotNull))\n             .select($\"title\", $\"id\",lower(S2articlesdf(\"doi\")).as(\"doi\"), $\"magId\", $\"fieldsOfStudy\".as(\"s2fos\"), $\"pmid\".as(\"pmId\"), $\"authors\")\n             \n//S2subsetdf.show(10)\n\n//Create pub - author rows\nval S2flatdf \u003d S2subsetdf.select($\"title\", $\"id\", $\"doi\", $\"magId\", $\"pmId\", $\"S2fos\", explode($\"authors\").as(\"authorsflat\"))\n\nval S2_Pub_Authors \u003d S2flatdf.select($\"title\".as(\"S2title\"), $\"id\".as(\"S2paperId\"), lower($\"doi\").as(\"S2doi\"), $\"S2fos\", $\"magId\", $\"pmId\", $\"authorsflat.name\".as(\"S2name\"),concat_ws(\"\",$\"authorsflat.ids\").as(\"S2authorId\"),\n                                    unaccent2( $\"authorsflat.name\").as(\"S2shortNormName\"),fulltrim( $\"authorsflat.name\").as(\"S2normName\"))\n//.persist(StorageLevel.DISK_ONLY)\n//.cache()\n\n//S2_Pub_Authors.printSchema\n//S2_Pub_Authors.show(5)\n\n//println(\"S2_Author_Pub_Cnt:\" + S2_Pub_Authors.count())\nS2_Pub_Authors.write.mode(\"overwrite\").parquet(\"/media/datadisk/Datasets/MAG_S2/S2_Pub_Authors.parquet\")\n",
       "user": "anonymous",
-      "dateUpdated": "2020-11-22 23:23:57.819",
+      "dateUpdated": "2020-11-24 14:27:02.958",
       "config": {
-        "colWidth": 12.0,
-        "fontSize": 9.0,
-        "enabled": true,
-        "results": {},
         "editorSetting": {
           "language": "scala",
           "editOnDblClick": false,
           "completionKey": "TAB",
           "completionSupport": true
         },
+        "colWidth": 12.0,
         "editorMode": "ace/mode/scala",
-        "title": true
+        "fontSize": 9.0,
+        "title": true,
+        "results": {},
+        "enabled": true
       },
       "settings": {
         "params": {},
@@ -98,9 +98,9 @@
     },
     {
       "title": "Pre-process MAG Data",
-      "text": "%spark\n\n\nimport com.github.mrpowers.spark.stringmetric.SimilarityFunctions._\nimport com.github.mrpowers.spark.stringmetric.PhoneticAlgorithms._\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\n//org.apache.commons.lang3.StringUtils.stripAccents(input.toLowerCase(Locale.ENGLISH));\n\n\n\nval unaccent2 \u003d udf[String, String]((e:String) \u003d\u003e {\n    \n    val normname \u003d org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    //.replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n    .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n\t\t\t\t.trim().split(\" \")\n    \n\n val shortName \u003d  if (normname.length \u003d\u003d 1) normname(0) else normname(0).take(1) + normname(normname.length-1)\n shortName\n\n    \n})\n\nval fulltrim \u003d udf[String, String]((e:String) \u003d\u003e {\n    \n org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    .replaceAll(\"[ \u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n\t\t\t\t.trim()\n    \n})\n\nval logger: Logger \u003d LoggerFactory.getLogger(\"MyZeppelinLogger\");\nlogger.info(\"Test my logger\");\n\n\n//Get MAG AUthor - Pub pairs\nval MAG_HOME \u003d \"/media/datadisk/Datasets/MAG/20201109/mag\"\nval MAG_ADV \u003d  \"/media/datadisk/Datasets/MAG/20201109/advanced\"\nval paperAuthorsAffTsvFilename \u003d \"PaperAuthorAffiliations.txt\"\nval authorsAffTsvFilename \u003d \"Authors.txt\"\nval papersTsvFilename \u003d \"Papers.txt\"\n\n\nval paperAuthorAffSchema \u003d new StructType().\n                add(\"paperId\", LongType, false).\n                add(\"authorId\", LongType, false).                \n                add(\"affiliationId\", LongType, true).\n                add(\"authorSequenceNumber\",IntegerType, true).\n                add(\"originalAuthor\", StringType, true).\n                add(\"originalAffiliation\", StringType, true)\n\n                \nval paperAuthorAffdf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(paperAuthorAffSchema).\n                csv(s\"file://$MAG_HOME/$paperAuthorsAffTsvFilename\")\n                \n                \nval authorSchema \u003d new StructType().\n                add(\"authorId\", LongType, false).\n                add(\"rank\", LongType, true).                \n                add(\"normalizedName\", StringType, true).\n                add(\"displayName\",StringType, true).\n                add(\"lastKnownAffiliationId\", LongType, true).\n                add(\"paperCount\", LongType, true).\n                add(\"paperFamilyCount\", LongType, true).\n                add(\"citationCount\", LongType, true).\n                add(\"createdDate\", DateType, true)\n                \n\n                \nval authordf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(authorSchema).\n                csv(s\"file://$MAG_HOME/$authorsAffTsvFilename\")\n\nval paperSchema \u003d new StructType().\n    add(\"paperId\", LongType, false).\n    add(\"magRank\", IntegerType, true).\n    add(\"doi\", StringType, true).\n    add(\"docTypetmp\", StringType, true).\n    add(\"normalizedTitle\", StringType, true).\n    add(\"title\", StringType, false).\n    add(\"bookTitle\", StringType, true).\n    add(\"pubYear\", IntegerType, true).\n    add(\"pubDate\", StringType, true).\n    add(\"onlineDate\", StringType, true).\n    add(\"publisherName\", StringType, true).\n    add(\"journalId\", StringType, true).\n    add(\"conferenceSeriesId\", LongType, true).\n    add(\"conferenceInstancesId\", LongType, true).\n    add(\"volume\", StringType, true).\n    add(\"issue\", StringType, true).\n    add(\"firstPage\", StringType, true).\n    add(\"lastPage\", StringType, true).\n    add(\"referenceCount\", LongType, true).\n    add(\"citationCount\", LongType, true).\n    add(\"estimatedCitation\", LongType, true).\n    add(\"originalVenue\", StringType, true).\n    add(\"familyId\", StringType, true).\n    add(\"createdDate\", DateType, true)\n    \nval papersdf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n              schema(paperSchema).\n             csv(s\"file://$MAG_HOME/$papersTsvFilename\")\n\nval paperAuthorGrpAffdf \u003d paperAuthorAffdf.groupBy(paperAuthorAffdf(\"paperId\"), paperAuthorAffdf(\"authorId\"))\n                .agg( collect_list(paperAuthorAffdf(\"affiliationId\")).as(\"affiliationId\"))\n\n\n//paperFieldsOfStudydf.printSchema\n//paperAuthorGrpAffdf.show(5)\n\nval fieldsOfStudyTsvFilename \u003d \"FieldsOfStudy.txt\"\nval paperFieldsOfStudyTsvFilename \u003d \"PaperFieldsOfStudy.txt\"\nval fieldOfStudyChildrenTsvFilename \u003d  \"FieldOfStudyChildren.txt\"\n\n\n\nval paperFieldsOfStudyschema \u003d new StructType().\n                add(\"paperId\", LongType, false).\n                add(\"fieldsOfStudyId\", LongType, false).\n                add(\"score\", DoubleType, true)\n                \nval paperFieldsOfStudydf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(paperFieldsOfStudyschema).\n                csv(s\"file://$MAG_ADV/$paperFieldsOfStudyTsvFilename\")\n//paperFieldsOfStudydf.printSchema\n//paperFieldsOfStudydf.show(5)\n\n//Enrich with FoS (lvl0, lvl1 and other)\n\nval fieldsOfStudyschema \u003d new StructType().\n                add(\"fieldsOfStudyId\", LongType, false).\n                add(\"magRank\", IntegerType, true).\n                add(\"normalizedName\", StringType, true).\n                add(\"name\", StringType, true).\n                add(\"mainType\", StringType, true).\n                add(\"level\", IntegerType, true).\n                add(\"paperCount\", LongType, true).\n                add(\"paperFamilyCount\", LongType, true).\n                add(\"citationCount\", LongType, true).\n                add(\"createdDate\", DateType, true)\n                \nval fieldsOfStudydf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(fieldsOfStudyschema).\n                csv(s\"file://$MAG_ADV/$fieldsOfStudyTsvFilename\")\n\nval fieldOfStudyChildrenschema \u003d new StructType().\n                add(\"fieldOfStudyId\", LongType, false).\n                add(\"childFieldOfStudyId\", LongType, false)\n                \n                \nval fieldOfStudyChildrendf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(fieldOfStudyChildrenschema).\n                csv(s\"file://$MAG_ADV/$fieldOfStudyChildrenTsvFilename\")\n\n//val fos_lvl0 \u003d fieldsOfStudydf.filter($\"level\"\u003d\u003d\u003d0).show()\n\n//val fos_lvl1 \u003d fieldsOfStudydf.filter($\"level\"\u003d\u003d\u003d1).show()\n\n\nval paper_fos \u003d paperFieldsOfStudydf.join(broadcast(fieldsOfStudydf), paperFieldsOfStudydf(\"fieldsOfStudyId\")\u003d\u003d\u003d fieldsOfStudydf(\"fieldsOfStudyId\") \u0026\u0026 $\"level\" \u003e 1, \"inner\")\n                .groupBy(paperFieldsOfStudydf(\"paperId\").as(\"paper_fos_paperId\"))\n                .agg( collect_list(paperFieldsOfStudydf(\"fieldsOfStudyId\")).as(\"fosids\"))\n                //.select(paperFieldsOfStudydf(\"paperId\").as(\"paper_fos_paperId\"), \"fosids\")\n             //   .show(10)\n//\n\nval paper_fos_lvl0 \u003d paperFieldsOfStudydf.join(broadcast(fieldsOfStudydf), paperFieldsOfStudydf(\"fieldsOfStudyId\")\u003d\u003d\u003d fieldsOfStudydf(\"fieldsOfStudyId\") \u0026\u0026 $\"level\"\u003d\u003d\u003d0, \"inner\")\n                .groupBy(paperFieldsOfStudydf(\"paperId\").as(\"paper_foslvl0_paperId\"))\n                .agg( collect_list(paperFieldsOfStudydf(\"fieldsOfStudyId\")).as(\"fosids_lvl0\"))\n               // .show(10)\n                \n                 \n                \nval paper_fos_lvl1 \u003d paperFieldsOfStudydf.join(broadcast(fieldsOfStudydf), paperFieldsOfStudydf(\"fieldsOfStudyId\")\u003d\u003d\u003d fieldsOfStudydf(\"fieldsOfStudyId\") \u0026\u0026 $\"level\"\u003d\u003d\u003d1, \"inner\")\n                .groupBy(paperFieldsOfStudydf(\"paperId\").as(\"paper_foslvl1_paperId\"))\n                .agg( collect_list(paperFieldsOfStudydf(\"fieldsOfStudyId\")).as(\"fosids_lvl1\"))\n                //.show(10)\n             \n      \n\n\n\nval MAG_pub_authorsdf \u003d papersdf\n              //.join(broadcast(doisdf), lower(papersdf(\"doi\"))\u003d\u003d\u003ddoisdf(\"doi\"), \"inner\")\n              .join(paper_fos, paper_fos(\"paper_fos_paperId\")\u003d\u003d\u003d papersdf(\"paperId\"), \"outer\")\n              .join(paper_fos_lvl0, paper_fos_lvl0(\"paper_foslvl0_paperId\") \u003d\u003d\u003d papersdf(\"paperId\"), \"outer\")\n              .join(paper_fos_lvl1, paper_fos_lvl1(\"paper_foslvl1_paperId\") \u003d\u003d\u003d papersdf(\"paperId\"), \"outer\")        \n              .join(paperAuthorGrpAffdf, paperAuthorGrpAffdf(\"paperId\")\u003d\u003d\u003dpapersdf(\"paperId\"), \"inner\")\n              .join(authordf, paperAuthorGrpAffdf(\"authorId\")\u003d\u003d\u003dauthordf(\"authorId\"), \"inner\")\n              .select(papersdf(\"title\").as(\"MAGtitle\"), papersdf(\"paperId\").as(\"MAGpaperId\"),lower(papersdf(\"doi\")).as(\"MAGdoi\"), authordf(\"displayName\") as \"MAGname\", fulltrim(authordf(\"normalizedName\")) as \"MAGnormName\", \n                  unaccent2(authordf(\"normalizedName\")).as(\"MAGshortNormName\"), \n                  paperAuthorGrpAffdf(\"authorId\").as(\"MAGauthorId\"), paperAuthorGrpAffdf(\"affiliationId\"), paper_fos(\"fosids\"), paper_fos_lvl0(\"fosids_lvl0\") ,paper_fos_lvl1(\"fosids_lvl1\"))\n              .persist(StorageLevel.DISK_ONLY)\n              //.cache()\n             //.write.csv(\"relatedFoS.csv\")\n                //fieldsOfStudydf.dropDuplicates(\"mainType\").select(\"mainType\").show(200)\n\nprintln(\"MAG_Author_pubCnt:\"+MAG_pub_authorsdf.count())\n\nMAG_pub_authorsdf.write.parquet(\"/media/datadisk/Datasets/MAG_S2/MAG_pub_authors.parquet\")\n",
+      "text": "%spark\n\n\nimport com.github.mrpowers.spark.stringmetric.SimilarityFunctions._\nimport com.github.mrpowers.spark.stringmetric.PhoneticAlgorithms._\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\n//org.apache.commons.lang3.StringUtils.stripAccents(input.toLowerCase(Locale.ENGLISH));\n\n\n\n\nval unaccent2 \u003d udf[String, String]((e:String) \u003d\u003e {\n    \n    val normname \u003d org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    //.replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n    .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n\t\t\t\t.trim().split(\" \")\n    \n\n val shortName \u003d  if (normname.length \u003d\u003d 1) normname(0) else normname(0).take(1) + normname(normname.length-1)\n shortName\n\n    \n})\n\nval fulltrim \u003d udf[String, String]((e:String) \u003d\u003e {\n    \n org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    .replaceAll(\"[ \u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n\t\t\t\t.trim()\n    \n})\n\nval logger: Logger \u003d LoggerFactory.getLogger(\"MyZeppelinLogger\");\nlogger.info(\"Test my logger\");\n\n\n//Get MAG AUthor - Pub pairs\nval MAG_HOME \u003d \"/media/datadisk/Datasets/MAG/20201109/mag\"\nval MAG_ADV \u003d  \"/media/datadisk/Datasets/MAG/20201109/advanced\"\nval paperAuthorsAffTsvFilename \u003d \"PaperAuthorAffiliations.txt\"\nval authorsAffTsvFilename \u003d \"Authors.txt\"\nval papersTsvFilename \u003d \"Papers.txt\"\n\n\nval paperAuthorAffSchema \u003d new StructType().\n                add(\"paperId\", LongType, false).\n                add(\"authorId\", LongType, false).                \n                add(\"affiliationId\", LongType, true).\n                add(\"authorSequenceNumber\",IntegerType, true).\n                add(\"originalAuthor\", StringType, true).\n                add(\"originalAffiliation\", StringType, true)\n\n                \nval paperAuthorAffdf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(paperAuthorAffSchema).\n                csv(s\"file://$MAG_HOME/$paperAuthorsAffTsvFilename\")\n                \n                \nval authorSchema \u003d new StructType().\n                add(\"authorId\", LongType, false).\n                add(\"rank\", LongType, true).                \n                add(\"normalizedName\", StringType, true).\n                add(\"displayName\",StringType, true).\n                add(\"lastKnownAffiliationId\", LongType, true).\n                add(\"paperCount\", LongType, true).\n                add(\"paperFamilyCount\", LongType, true).\n                add(\"citationCount\", LongType, true).\n                add(\"createdDate\", DateType, true)\n                \n\n                \nval authordf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(authorSchema).\n                csv(s\"file://$MAG_HOME/$authorsAffTsvFilename\")\n\nval paperSchema \u003d new StructType().\n    add(\"paperId\", LongType, false).\n    add(\"magRank\", IntegerType, true).\n    add(\"doi\", StringType, true).\n    add(\"docTypetmp\", StringType, true).\n    add(\"normalizedTitle\", StringType, true).\n    add(\"title\", StringType, false).\n    add(\"bookTitle\", StringType, true).\n    add(\"pubYear\", IntegerType, true).\n    add(\"pubDate\", StringType, true).\n    add(\"onlineDate\", StringType, true).\n    add(\"publisherName\", StringType, true).\n    add(\"journalId\", StringType, true).\n    add(\"conferenceSeriesId\", LongType, true).\n    add(\"conferenceInstancesId\", LongType, true).\n    add(\"volume\", StringType, true).\n    add(\"issue\", StringType, true).\n    add(\"firstPage\", StringType, true).\n    add(\"lastPage\", StringType, true).\n    add(\"referenceCount\", LongType, true).\n    add(\"citationCount\", LongType, true).\n    add(\"estimatedCitation\", LongType, true).\n    add(\"originalVenue\", StringType, true).\n    add(\"familyId\", StringType, true).\n    add(\"createdDate\", DateType, true)\n    \nval papersdf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n              schema(paperSchema).\n             csv(s\"file://$MAG_HOME/$papersTsvFilename\")\n\nval paperAuthorGrpAffdf \u003d paperAuthorAffdf.groupBy(paperAuthorAffdf(\"paperId\"), paperAuthorAffdf(\"authorId\"))\n                .agg( collect_list(paperAuthorAffdf(\"affiliationId\")).as(\"affiliationId\"))\n\n\n//paperFieldsOfStudydf.printSchema\n//paperAuthorGrpAffdf.show(5)\n\nval fieldsOfStudyTsvFilename \u003d \"FieldsOfStudy.txt\"\nval paperFieldsOfStudyTsvFilename \u003d \"PaperFieldsOfStudy.txt\"\nval fieldOfStudyChildrenTsvFilename \u003d  \"FieldOfStudyChildren.txt\"\n\n\n\nval paperFieldsOfStudyschema \u003d new StructType().\n                add(\"paperId\", LongType, false).\n                add(\"fieldsOfStudyId\", LongType, false).\n                add(\"score\", DoubleType, true)\n                \nval paperFieldsOfStudydf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(paperFieldsOfStudyschema).\n                csv(s\"file://$MAG_ADV/$paperFieldsOfStudyTsvFilename\")\n//paperFieldsOfStudydf.printSchema\n//paperFieldsOfStudydf.show(5)\n\n//Enrich with FoS (lvl0, lvl1 and other)\n\nval fieldsOfStudyschema \u003d new StructType().\n                add(\"fieldsOfStudyId\", LongType, false).\n                add(\"magRank\", IntegerType, true).\n                add(\"normalizedName\", StringType, true).\n                add(\"name\", StringType, true).\n                add(\"mainType\", StringType, true).\n                add(\"level\", IntegerType, true).\n                add(\"paperCount\", LongType, true).\n                add(\"paperFamilyCount\", LongType, true).\n                add(\"citationCount\", LongType, true).\n                add(\"createdDate\", DateType, true)\n                \nval fieldsOfStudydf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(fieldsOfStudyschema).\n                csv(s\"file://$MAG_ADV/$fieldsOfStudyTsvFilename\")\n\nval fieldOfStudyChildrenschema \u003d new StructType().\n                add(\"fieldOfStudyId\", LongType, false).\n                add(\"childFieldOfStudyId\", LongType, false)\n                \n                \nval fieldOfStudyChildrendf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(fieldOfStudyChildrenschema).\n                csv(s\"file://$MAG_ADV/$fieldOfStudyChildrenTsvFilename\")\n\n//val fos_lvl0 \u003d fieldsOfStudydf.filter($\"level\"\u003d\u003d\u003d0).show()\n\n//val fos_lvl1 \u003d fieldsOfStudydf.filter($\"level\"\u003d\u003d\u003d1).show()\n\n\nval paper_fos \u003d paperFieldsOfStudydf.join(broadcast(fieldsOfStudydf), paperFieldsOfStudydf(\"fieldsOfStudyId\")\u003d\u003d\u003d fieldsOfStudydf(\"fieldsOfStudyId\") \u0026\u0026 $\"level\" \u003e 1, \"inner\")\n                .groupBy(paperFieldsOfStudydf(\"paperId\").as(\"paper_fos_paperId\"))\n                .agg( collect_list(paperFieldsOfStudydf(\"fieldsOfStudyId\")).as(\"fosids\"))\n                //.select(paperFieldsOfStudydf(\"paperId\").as(\"paper_fos_paperId\"), \"fosids\")\n             //   .show(10)\n//\n\nval paper_fos_lvl0 \u003d paperFieldsOfStudydf.join(broadcast(fieldsOfStudydf), paperFieldsOfStudydf(\"fieldsOfStudyId\")\u003d\u003d\u003d fieldsOfStudydf(\"fieldsOfStudyId\") \u0026\u0026 $\"level\"\u003d\u003d\u003d0, \"inner\")\n                .groupBy(paperFieldsOfStudydf(\"paperId\").as(\"paper_foslvl0_paperId\"))\n                .agg( collect_list(paperFieldsOfStudydf(\"fieldsOfStudyId\")).as(\"fosids_lvl0\"))\n               // .show(10)\n                \n                 \n                \nval paper_fos_lvl1 \u003d paperFieldsOfStudydf.join(broadcast(fieldsOfStudydf), paperFieldsOfStudydf(\"fieldsOfStudyId\")\u003d\u003d\u003d fieldsOfStudydf(\"fieldsOfStudyId\") \u0026\u0026 $\"level\"\u003d\u003d\u003d1, \"inner\")\n                .groupBy(paperFieldsOfStudydf(\"paperId\").as(\"paper_foslvl1_paperId\"))\n                .agg( collect_list(paperFieldsOfStudydf(\"fieldsOfStudyId\")).as(\"fosids_lvl1\"))\n                //.show(10)\n             \n      \n\n\n\nval MAG_pub_authorsdf \u003d papersdf\n              //.join(broadcast(doisdf), lower(papersdf(\"doi\"))\u003d\u003d\u003ddoisdf(\"doi\"), \"inner\")\n              .join(paper_fos, paper_fos(\"paper_fos_paperId\")\u003d\u003d\u003d papersdf(\"paperId\"), \"outer\")\n              .join(paper_fos_lvl0, paper_fos_lvl0(\"paper_foslvl0_paperId\") \u003d\u003d\u003d papersdf(\"paperId\"), \"outer\")\n              .join(paper_fos_lvl1, paper_fos_lvl1(\"paper_foslvl1_paperId\") \u003d\u003d\u003d papersdf(\"paperId\"), \"outer\")        \n              .join(paperAuthorGrpAffdf, paperAuthorGrpAffdf(\"paperId\")\u003d\u003d\u003dpapersdf(\"paperId\"), \"inner\")\n              .join(authordf, paperAuthorGrpAffdf(\"authorId\")\u003d\u003d\u003dauthordf(\"authorId\"), \"inner\")\n              .select(papersdf(\"title\").as(\"MAGtitle\"), papersdf(\"paperId\").as(\"MAGpaperId\"),lower(papersdf(\"doi\")).as(\"MAGdoi\"), authordf(\"displayName\") as \"MAGname\", fulltrim(authordf(\"normalizedName\")) as \"MAGnormName\", \n                  unaccent2(authordf(\"normalizedName\")).as(\"MAGshortNormName\"), \n                  paperAuthorGrpAffdf(\"authorId\").as(\"MAGauthorId\"), paperAuthorGrpAffdf(\"affiliationId\"), paper_fos(\"fosids\"), paper_fos_lvl0(\"fosids_lvl0\") ,paper_fos_lvl1(\"fosids_lvl1\"))\n              .persist(StorageLevel.DISK_ONLY)\n              //.cache()\n             //.write.csv(\"relatedFoS.csv\")\n                //fieldsOfStudydf.dropDuplicates(\"mainType\").select(\"mainType\").show(200)\n\nprintln(\"MAG_Author_pubCnt:\"+MAG_pub_authorsdf.count())\n\nMAG_pub_authorsdf.write.parquet(\"/media/datadisk/Datasets/MAG_S2/MAG_pub_authors.parquet\")\n",
       "user": "anonymous",
-      "dateUpdated": "2020-11-22 23:23:40.924",
+      "dateUpdated": "2020-11-24 17:14:43.466",
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -156,9 +156,9 @@
     },
     {
       "title": "Join MAG - S2 pub-author records",
-      "text": "%spark\n\n\nimport com.github.mrpowers.spark.stringmetric.SimilarityFunctions._\nimport com.github.mrpowers.spark.stringmetric.PhoneticAlgorithms._\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\nval MAG_pub_authorsdf \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/MAG_pub_authors.parquet\")\nval S2_Pub_Authors \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_Pub_Authors.parquet\")\n\nval S2_MAG_df \u003d MAG_pub_authorsdf\n                   .join(S2_Pub_Authors, S2_Pub_Authors(\"magId\") \u003d\u003d\u003d MAG_pub_authorsdf(\"MAGpaperId\")  \u0026\u0026 ( S2_Pub_Authors(\"S2shortNormName\")\u003d\u003d\u003dMAG_pub_authorsdf(\"MAGshortNormName\")  || ( jaccard_similarity($\"MAGnormName\", $\"S2normName\")\u003e0.8  \u0026\u0026 double_metaphone($\"MAGnormName\") \u003d\u003d\u003d double_metaphone($\"S2normName\") ) ), \"outer\")                  \n                   .select(MAG_pub_authorsdf(\"MAGtitle\"), MAG_pub_authorsdf(\"MAGpaperId\"), MAG_pub_authorsdf(\"MAGdoi\"),  MAG_pub_authorsdf(\"MAGshortNormName\"), MAG_pub_authorsdf(\"MAGname\"), MAG_pub_authorsdf(\"MAGnormName\"), MAG_pub_authorsdf(\"MAGauthorId\")\n                   , MAG_pub_authorsdf(\"affiliationId\"), S2_Pub_Authors(\"S2authorId\"),S2_Pub_Authors(\"S2paperId\"), S2_Pub_Authors(\"S2doi\"), S2_Pub_Authors(\"S2name\"), S2_Pub_Authors(\"S2shortNormName\"))\n                  // .persist(StorageLevel.DISK_ONLY)\n\n//S2_MAG_df.show(10)\n//println(\"Join_S2_Mag_auth_pubCnt:\"+S2_MAG_df.count())\nS2_MAG_df.write.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_df.parquet\")",
+      "text": "%spark\n\n\nimport com.github.mrpowers.spark.stringmetric.SimilarityFunctions._\nimport com.github.mrpowers.spark.stringmetric.PhoneticAlgorithms._\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\nval MAG_pub_authorsdf \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/MAG_pub_authors.parquet\")\nval S2_Pub_Authors \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_Pub_Authors.parquet\")\n\nval S2_MAG_df \u003d MAG_pub_authorsdf\n                   .join(S2_Pub_Authors, S2_Pub_Authors(\"magId\") \u003d\u003d\u003d MAG_pub_authorsdf(\"MAGpaperId\")  \u0026\u0026 ( S2_Pub_Authors(\"S2shortNormName\")\u003d\u003d\u003dMAG_pub_authorsdf(\"MAGshortNormName\")  || ( jaccard_similarity($\"MAGnormName\", $\"S2normName\")\u003e0.8  \u0026\u0026 double_metaphone($\"MAGnormName\") \u003d\u003d\u003d double_metaphone($\"S2normName\") ) ), \"outer\")                  \n                   .select(MAG_pub_authorsdf(\"MAGtitle\"), MAG_pub_authorsdf(\"MAGpaperId\"), MAG_pub_authorsdf(\"MAGdoi\"),  MAG_pub_authorsdf(\"MAGshortNormName\"), MAG_pub_authorsdf(\"MAGname\"), MAG_pub_authorsdf(\"MAGnormName\"), MAG_pub_authorsdf(\"MAGauthorId\")\n                   , MAG_pub_authorsdf(\"affiliationId\"), S2_Pub_Authors(\"S2authorId\"),S2_Pub_Authors(\"S2paperId\"), S2_Pub_Authors(\"S2doi\"), S2_Pub_Authors(\"S2name\"), S2_Pub_Authors(\"S2shortNormName\"), S2_Pub_Authors(\"S2fos\") )\n                  // .persist(StorageLevel.DISK_ONLY)\n\n//S2_MAG_df.show(10)\n//println(\"Join_S2_Mag_auth_pubCnt:\"+S2_MAG_df.count())\nS2_MAG_df.write.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_df.parquet\")",
       "user": "anonymous",
-      "dateUpdated": "2020-11-22 23:25:32.251",
+      "dateUpdated": "2020-11-24 17:23:54.163",
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -292,6 +292,212 @@
       "status": "FINISHED"
     },
     {
+      "title": "Read ORCiD dump \u0026 convert to parquet",
+      "text": "%spark\n\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\nimport  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\n//org.apache.commons.lang3.StringUtils.stripAccents(input.toLowerCase(Locale.ENGLISH));\n\n\n\nval unaccent2 \u003d udf[String, String]((e:String) \u003d\u003e {\n    \n    val normname \u003d org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    //.replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n    .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n\t\t\t\t.trim().split(\" \")\n    \n\n val shortName \u003d  if (normname.length \u003d\u003d 1) normname(0) else normname(0).take(1) + normname(normname.length-1)\n shortName\n\n    \n})\n\nval fulltrim \u003d udf[String, String]((e:String) \u003d\u003e {\n    \n org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    .replaceAll(\"[ \u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n\t\t\t\t.trim()\n    \n})\n\n\n\n//val jsondf \u003d spark.read.json(\"/media/datadisk/Datasets/ORCiD/9988322/ORCID_2019_summaries/outgz/0.gz\")\nval orcid_df \u003d spark.read.json(\"/home/ometaxas/Datasets/ORCiD\")\n.select(lower($\"DOI\").as(\"doi\"), concat_ws(\" \", $\"firstName\",$\"surName\").as(\"ORCfullName\"), unaccent2( concat_ws(\" \", $\"firstName\",$\"surName\")).as(\"ORCshortNormName\"), fulltrim(concat_ws(\" \", $\"firstName\",$\"surName\")).as(\"ORCnormName\"),  $\"pmID\".as(\"pmId\"), $\"orcId\")\n.dropDuplicates()\n//.persist(StorageLevel.DISK_ONLY)\n.cache()\n\n\norcid_df.printSchema\nprintln(\"ORCiD cnt:\" + orcid_df.count())\norcid_df.show(20)\n\norcid_df.write.parquet(\"/media/datadisk/Datasets/MAG_S2/orcid.parquet\")                    \n\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-11-23 15:23:41.852",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "root\n |-- doi: string (nullable \u003d true)\n |-- ORCfullName: string (nullable \u003d false)\n |-- ORCshortNormName: string (nullable \u003d true)\n |-- ORCnormName: string (nullable \u003d true)\n |-- pmId: string (nullable \u003d true)\n |-- orcId: string (nullable \u003d true)\n\nORCiD cnt:34108075\n+--------------------+--------------------+----------------+--------------------+--------+-------------------+\n|                 doi|         ORCfullName|ORCshortNormName|         ORCnormName|    pmId|              orcId|\n+--------------------+--------------------+----------------+--------------------+--------+-------------------+\n|10.4049/jimmunol....|    Bettina Böttcher|       bbottcher|     bettinabottcher|26873992|0000-0002-7962-4849|\n|10.1186/1476-072x...| Natalie Colabianchi|    ncolabianchi|  nataliecolabianchi|        |0000-0002-7951-9475|\n|10.1103/physrevb....|Andreas Weichselbaum|   aweichselbaum| andreasweichselbaum|        |0000-0002-5832-3908|\n|10.1016/j.jpain.2...|María Teresa Carr...|           mpena|mariateresacarril...|        |0000-0001-6940-2460|\n|10.1098/rsbl.2008...|       Jan Pawlowski|      jpawlowski|        janpawlowski|18522922|0000-0003-2421-388X|\n|10.5897/jmcs2017....|      Messiah Ijeoma|         mijeoma|       messiahijeoma|        |0000-0001-7094-5905|\n|  10.3390/jcm9072127|        Laura Padoan|         lpadoan|         laurapadoan|        |0000-0003-4618-7336|\n|  10.2147/cia.s36461|      Paul Takahashi|      ptakahashi|       paultakahashi|        |0000-0002-1891-309X|\n|10.1017/s13561863...|  Arin Salamah-Qudsi|   asalamahqudsi|    arinsalamahqudsi|        |0000-0001-6803-0802|\n|  10.1007/bf02333013|  GUIDO FRANCESCHINI|   gfranceschini|   guidofranceschini|        |0000-0003-2687-1771|\n|10.1109/ted.2011....|Carl-Mikael Zette...|     czetterling|carlmikaelzetterling|        |0000-0001-8108-2631|\n|10.1200/jco.2010....|          Susan Cohn|           scohn|           susancohn|        |0000-0001-5749-7650|\n|10.1016/j.cmi.201...|         Csaba Fehér|          cfeher|          csabafeher|        |0000-0001-6679-493X|\n|10.1007/978-94-01...|          Mike Clark|          mclark|           mikeclark|        |0000-0002-5539-4997|\n|  10.1039/c3nr01338c|           Yukun Zhu|            yzhu|            yukunzhu|        |0000-0003-3838-0283|\n|10.1158/1078-0432...|Adriaan Vandersti...| avanderstichele|adriaanvanderstic...|27663594|0000-0002-3984-2948|\n|   10.1111/trf.15838|      Olivier Cassar|         ocassar|       oliviercassar|        |0000-0001-5331-6357|\n|  10.3303/cet1229230|Geraldine Heynder...|    gheynderickx|geraldineheynderickx|        |0000-0002-0713-9588|\n|10.1007/978-3-642...|         Laurent Noé|            lnoe|          laurentnoe|        |0000-0002-1170-8376|\n|10.1007/s11608-01...|     Hervé FERNANDEZ|      hfernandez|      hervefernandez|        |0000-0002-6463-1018|\n+--------------------+--------------------+----------------+--------------------+--------+-------------------+\nonly showing top 20 rows\n\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger\nimport org.slf4j.LoggerFactory\nimport org.apache.spark.sql.functions.concat_ws\nimport org.apache.spark.sql.functions.countDistinct\nimport org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer\nimport java.util.Locale\nimport org.apache.spark.storage.StorageLevel\n\u001b[1m\u001b[34munaccent2\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.expressions.UserDefinedFunction\u001b[0m \u003d SparkUserDefinedFunction($Lambda$6202/0x00007fdfa06ae040@346a9bdf,StringType,List(Some(class[value[0]: string])),None,true,true)\n\u001b[1m\u001b[34mfulltrim\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.expressions.UserDefinedFunction\u001b[0m \u003d SparkUserDefinedFunction($Lambda$620...\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d25"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d26"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d27"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d28"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d29"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1605871491169_1622597750",
+      "id": "paragraph_1605871491169_1622597750",
+      "dateCreated": "2020-11-20 13:24:51.169",
+      "dateStarted": "2020-11-23 15:23:41.857",
+      "dateFinished": "2020-11-23 15:25:24.134",
+      "status": "FINISHED"
+    },
+    {
+      "title": "Join ORCiD Data with MAG \u0026 S2",
+      "text": "%spark\n\nimport com.github.mrpowers.spark.stringmetric.SimilarityFunctions._\nimport com.github.mrpowers.spark.stringmetric.PhoneticAlgorithms._\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\n\n\n//val jsondf \u003d spark.read.json(\"/media/datadisk/Datasets/ORCiD/9988322/ORCID_2019_summaries/outgz/0.gz\")\nval orcid_df \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/orcid.parquet\")\n.cache()\n\n\norcid_df.printSchema\nprintln(\"ORCiD cnt:\" + orcid_df.count())\norcid_df.show(40)\n\n\nval S2_MAG_df \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_df.parquet\")\n.cache()\n\n\nval S2_MAG_Orcid_df1 \u003d S2_MAG_df\n                   .join(broadcast(orcid_df), S2_MAG_df(\"MAGdoi\") \u003d\u003d\u003d orcid_df(\"doi\") \u0026\u0026 ( S2_MAG_df(\"S2shortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\") ||  S2_MAG_df(\"MAGshortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\")   \n                  // || (levenshtein(fulltrim($\"MAGname\"), fulltrim($\"orcfullname\"))\u003e80  \u0026\u0026 soundex(fulltrim($\"MAGname\")) \u003d\u003d\u003d soundex(fulltrim($\"orcfullname\")) ) \n                   ), \"outer\")                  \n                   .select(S2_MAG_df(\"MAGtitle\"), S2_MAG_df(\"MAGpaperId\"), S2_MAG_df(\"MAGdoi\"),  S2_MAG_df(\"MAGshortNormName\"), S2_MAG_df(\"MAGname\"), S2_MAG_df(\"MAGnormName\"), S2_MAG_df(\"MAGauthorId\")\n                     , double_metaphone(S2_MAG_df(\"MAGnormName\")).as(\"soundexFull\"), double_metaphone(S2_MAG_df(\"MAGshortNormName\")).as(\"soundexShort\")\n                     //,S2_MAG_df(\"S2fos)\n                    , S2_MAG_df(\"affiliationId\"), S2_MAG_df(\"S2authorId\"),S2_MAG_df(\"S2paperId\"), S2_MAG_df(\"S2doi\"), S2_MAG_df(\"S2name\"), S2_MAG_df(\"S2shortNormName\"), orcid_df(\"orcId\"))\n                  // .persist(StorageLevel.DISK_ONLY)\n\nval S2_MAG_Orcid_df2 \u003d S2_MAG_df\n                   .join(broadcast(orcid_df), S2_MAG_df(\"S2doi\") \u003d\u003d\u003d orcid_df(\"doi\") \u0026\u0026 ( S2_MAG_df(\"S2shortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\") ||  S2_MAG_df(\"MAGshortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\")   \n                  // || (levenshtein(fulltrim($\"MAGname\"), fulltrim($\"orcfullname\"))\u003e80  \u0026\u0026 soundex(fulltrim($\"MAGname\")) \u003d\u003d\u003d soundex(fulltrim($\"orcfullname\")) ) \n                   ), \"outer\")                  \n                   .select(S2_MAG_df(\"MAGtitle\"), S2_MAG_df(\"MAGpaperId\"), S2_MAG_df(\"MAGdoi\"),  S2_MAG_df(\"MAGshortNormName\"), S2_MAG_df(\"MAGname\"), S2_MAG_df(\"MAGnormName\"), S2_MAG_df(\"MAGauthorId\")\n                   , double_metaphone(S2_MAG_df(\"MAGnormName\")).as(\"soundexFull\"), double_metaphone(S2_MAG_df(\"MAGshortNormName\")).as(\"soundexShort\")\n                   //,S2_MAG_df(\"S2fos)\n                 , S2_MAG_df(\"affiliationId\"), S2_MAG_df(\"S2authorId\"),S2_MAG_df(\"S2paperId\"), S2_MAG_df(\"S2doi\"), S2_MAG_df(\"S2name\"), S2_MAG_df(\"S2shortNormName\"), orcid_df(\"orcId\"))\n                   //.persist(StorageLevel.DISK_ONLY)\n\n\nval S2_MAG_Orcid_df                   \u003d \n                   S2_MAG_Orcid_df1.union(S2_MAG_Orcid_df2)\n                    .dropDuplicates()\n                    .persist(StorageLevel.DISK_ONLY)\n//println(\"ACMsubset cnt:\"+ACMsubsetouter.count())\n//ACMsubsetouter.orderBy(\"MAGshortNormName\").show(100) \n\nprintln(\"Orcid pub cnt:\"+S2_MAG_Orcid_df\n.filter(($\"orcid\" \u003d!\u003d \"\") \u0026\u0026 ($\"orcid\".isNotNull)).count())\n\nval df2 \u003d S2_MAG_Orcid_df.select(countDistinct(\"orcid\"))\ndf2.show(false)\n\n\nval dfMagid \u003d S2_MAG_Orcid_df.select(countDistinct(\"MAGauthorId\"))\ndfMagid.show(false)\n\nval dfS2Id \u003d S2_MAG_Orcid_df.select(countDistinct(\"S2authorId\"))\ndfS2Id.show(false)\n\nS2_MAG_Orcid_df.write.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_Orcid.parquet\")                    \n",
+      "user": "anonymous",
+      "dateUpdated": "2020-11-24 17:26:39.626",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d8"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d9"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d10"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d11"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d12"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1606221610014_51356091",
+      "id": "paragraph_1606221610014_51356091",
+      "dateCreated": "2020-11-24 14:40:10.014",
+      "dateStarted": "2020-11-24 17:26:39.634",
+      "dateFinished": "2020-11-24 17:26:07.832",
+      "status": "RUNNING"
+    },
+    {
+      "title": "Statistics ",
+      "text": "%spark\n\nval orcid_df \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/orcid.parquet\")\n.cache()\n\nprintln(\"paperAuthorAffdf cnt:\" + orcid_df.count())\nval paperIdsdf4 \u003d orcid_df.select(countDistinct(\"doi\")) \npaperIdsdf4.show(false)\nval authorIdsdf4 \u003d orcid_df.select(countDistinct(\"orcId\")) \nauthorIdsdf4.show(false)\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-11-24 11:13:27.069",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "paperAuthorAffdf cnt:34108075\n+-------------------+\n|count(DISTINCT doi)|\n+-------------------+\n|20145324           |\n+-------------------+\n\n+---------------------+\n|count(DISTINCT orcId)|\n+---------------------+\n|2110177              |\n+---------------------+\n\n\u001b[1m\u001b[34morcid_df\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [doi: string, ORCfullName: string ... 4 more fields]\n\u001b[1m\u001b[34mpaperIdsdf4\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m \u003d [count(DISTINCT doi): bigint]\n\u001b[1m\u001b[34mauthorIdsdf4\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m \u003d [count(DISTINCT orcId): bigint]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d0"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d1"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d2"
+            },
+            {
+              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d3"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1606138331418_98467935",
+      "id": "paragraph_1606138331418_98467935",
+      "dateCreated": "2020-11-23 15:32:11.418",
+      "dateStarted": "2020-11-23 20:35:07.694",
+      "dateFinished": "2020-11-23 20:35:45.582",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-11-24 11:12:50.591",
+      "config": {},
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1606209170591_423055544",
+      "id": "paragraph_1606209170591_423055544",
+      "dateCreated": "2020-11-24 11:12:50.591",
+      "status": "READY"
+    },
+    {
       "text": "%spark\nval PKGinitdf \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/PKGinitdf.parquet\")\n.persist(StorageLevel.DISK_ONLY)\n\nprintln(\"paperAuthorAffdf cnt:\" + PKGinitdf.count())\nval paperIdsdf3 \u003d PKGinitdf.select(countDistinct(\"MAGpaperId\")) \npaperIdsdf3.show(false)\nval authorIdsdf3 \u003d PKGinitdf.select(countDistinct(\"MAGauthorId\")) \nauthorIdsdf3.show(false)\n\nPKGinitdf.show(20)\n",
       "user": "anonymous",
       "dateUpdated": "2020-11-22 18:04:36.521",
@@ -355,37 +561,6 @@
       "dateStarted": "2020-11-22 18:04:36.524",
       "dateFinished": "2020-11-22 18:13:26.424",
       "status": "FINISHED"
-    },
-    {
-      "title": "Read ORCiD dump \u0026 convert to parquet",
-      "text": "%spark\n\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\nimport  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\n//org.apache.commons.lang3.StringUtils.stripAccents(input.toLowerCase(Locale.ENGLISH));\n\n\n\nval unaccent2 \u003d udf[String, String]((e:String) \u003d\u003e {\n    \n    val normname \u003d org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    //.replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n    .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n\t\t\t\t.trim().split(\" \")\n    \n\n val shortName \u003d  if (normname.length \u003d\u003d 1) normname(0) else normname(0).take(1) + normname(normname.length-1)\n shortName\n\n    \n})\n\nval fulltrim \u003d udf[String, String]((e:String) \u003d\u003e {\n    \n org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    .replaceAll(\"[ \u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n\t\t\t\t.trim()\n    \n})\n\n\n\n//val jsondf \u003d spark.read.json(\"/media/datadisk/Datasets/ORCiD/9988322/ORCID_2019_summaries/outgz/0.gz\")\nval orcid_df \u003d spark.read.json(\"/home/ometaxas/Datasets/ORCiD\")\n.select(lower($\"DOI\").as(\"doi\"), concat_ws(\" \", $\"firstName\",$\"surName\").as(\"orcfullname\"), unaccent2( concat_ws(\" \", $\"firstName\",$\"surName\")).as(\"orcShortNormName\"), $\"pmID\".as(\"pmId\"), $\"orcid\")\n.dropDuplicates()\n//.persist(StorageLevel.DISK_ONLY)\n.cache()\n\n\norcid_df.printSchema\nprintln(\"ORCiD cnt:\" + orcid_df.count())\norcid_df.show(40)\n\n",
-      "user": "anonymous",
-      "dateUpdated": "2020-11-20 13:26:11.004",
-      "config": {
-        "colWidth": 12.0,
-        "fontSize": 9.0,
-        "enabled": true,
-        "results": {},
-        "editorSetting": {
-          "language": "scala",
-          "editOnDblClick": false,
-          "completionKey": "TAB",
-          "completionSupport": true
-        },
-        "editorMode": "ace/mode/scala",
-        "title": true
-      },
-      "settings": {
-        "params": {},
-        "forms": {}
-      },
-      "apps": [],
-      "runtimeInfos": {},
-      "progressUpdateIntervalMs": 500,
-      "jobName": "paragraph_1605871491169_1622597750",
-      "id": "paragraph_1605871491169_1622597750",
-      "dateCreated": "2020-11-20 13:24:51.169",
-      "status": "READY"
     }
   ],
   "name": "Match_S2_MAG_ORCiD",
