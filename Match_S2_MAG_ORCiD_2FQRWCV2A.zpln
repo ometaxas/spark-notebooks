@@ -1,9 +1,9 @@
 {
   "paragraphs": [
     {
-      "text": "%spark.conf\n\n# It is strongly recommended to set SPARK_HOME explictly instead of using the embedded spark of Zeppelin. As the function of embedded spark of Zeppelin is limited and can only run in local mode.\nSPARK_HOME /home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2\n\n#spark.jars /home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2/plugins/rapids-4-spark_2.12-0.2.0.jar,/home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2/plugins/cudf-0.15-cuda10-1.jar\n\n#spark.sql.warehouse.dir /home/ometaxas/Programs/zeppelin-0.9.0-preview2-bin-all/spark-warehouse\n\nspark.serializer org.apache.spark.serializer.KryoSerializer\nspark.kryoserializer.buffer.max 1000M\n# set driver memory to 4g\nspark.driver.memory 100g\nspark.driver.maxResultSize 5g \n\n#spark.rapids.sql.concurrentGpuTasks\u003d2\n#spark.rapids.sql.enabled true\n#spark.rapids.memory.pinnedPool.size 2G \n\n#spark.plugins com.nvidia.spark.SQLPlugin \n\n#spark.locality.wait 0s \n#spark.sql.files.maxPartitionBytes 512m \n#spark.sql.shuffle.partitions 100 \n#spark.executor.resource.gpu.amount\u003d1\n\n\nSPARK_LOCAL_DIRS /home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2/tmp,/media/datadisk/Datasets/Spark\n#,/media/datadisk/Datasets/Spark \n#/media/datadisk/Datasets/Spark\n\n# set executor memrory 110g\n# spark.executor.memory  60g\n\n\n# set executor number to be 6\n# spark.executor.instances  6\n\n\n# Uncomment the following line if you want to use yarn-cluster mode (It is recommended to use yarn-cluster mode after Zeppelin 0.8, as the driver will run on the remote host of yarn cluster which can mitigate memory pressure of zeppelin server)\n# master yarn-cluster\n\n# Uncomment the following line if you want to use yarn-client mode (It is not recommended to use it after 0.8. Because it would launch the driver in the same host of zeppelin server which will increase memory pressure of zeppelin server)\n# master yarn-client\n\n# Uncomment the following line to enable HiveContext, and also put hive-site.xml under SPARK_CONF_DIR\n# zeppelin.spark.useHiveContext true",
+      "text": "%spark.conf\n\n# It is strongly recommended to set SPARK_HOME explictly instead of using the embedded spark of Zeppelin. As the function of embedded spark of Zeppelin is limited and can only run in local mode.\nSPARK_HOME /home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2\n\n#spark.jars /home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2/plugins/rapids-4-spark_2.12-0.2.0.jar, /home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2/plugins/cudf-0.15-cuda10-1.jar\n\n#spark.sql.warehouse.dir /home/ometaxas/Programs/zeppelin-0.9.0-preview2-bin-all/spark-warehouse\n\nspark.serializer org.apache.spark.serializer.KryoSerializer\nspark.kryoserializer.buffer.max 1000M\nspark.driver.memory 100g\nspark.driver.maxResultSize 5g \n\n#spark.rapids.sql.concurrentGpuTasks\u003d2\n#spark.rapids.sql.enabled true\n#spark.rapids.memory.pinnedPool.size 2G \n\n#spark.plugins com.nvidia.spark.SQLPlugin \n\n#spark.locality.wait 0s \n#spark.sql.files.maxPartitionBytes 512m \n#spark.sql.shuffle.partitions 100 \n#spark.executor.resource.gpu.amount\u003d1\n\n\nSPARK_LOCAL_DIRS /media/ometaxas/nvme/spark, /home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2/tmp\n                                             \n# /home/ometaxas/Programs/spark-3.0.1-bin-hadoop3.2/tmp,/media/datadisk/Datasets/Spark\n#,/media/datadisk/Datasets/Spark \n#/media/datadisk/Datasets/Spark\n\n# set executor memrory 110g\n# spark.executor.memory  60g\n\n\n# set executor number to be 6\n# spark.executor.instances  6\n\n\n# Uncomment the following line if you want to use yarn-cluster mode (It is recommended to use yarn-cluster mode after Zeppelin 0.8, as the driver will run on the remote host of yarn cluster which can mitigate memory pressure of zeppelin server)\n# master yarn-cluster\n\n# Uncomment the following line if you want to use yarn-client mode (It is not recommended to use it after 0.8. Because it would launch the driver in the same host of zeppelin server which will increase memory pressure of zeppelin server)\n# master yarn-client\n\n# Uncomment the following line to enable HiveContext, and also put hive-site.xml under SPARK_CONF_DIR\n# zeppelin.spark.useHiveContext true",
       "user": "anonymous",
-      "dateUpdated": "2020-12-09 16:02:48.831",
+      "dateUpdated": "2021-01-04 14:57:11.425",
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -31,14 +31,14 @@
       "jobName": "paragraph_1605800359478_1421580216",
       "id": "paragraph_1605800359478_1421580216",
       "dateCreated": "2020-11-19 17:39:19.478",
-      "dateStarted": "2020-12-09 16:02:48.855",
-      "dateFinished": "2020-12-09 16:02:48.875",
+      "dateStarted": "2021-01-04 14:57:11.447",
+      "dateFinished": "2021-01-04 14:57:11.464",
       "status": "FINISHED"
     },
     {
       "text": "%spark\nimport org.apache.commons.lang3.StringUtils\nimport java.util.Locale;\n\nval shortNormName \u003d udf[String, String]((e:String) \u003d\u003e {\n    \n    val normname \u003d org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    //.replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n     .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+‐–*\\\\\\\\-]+\", \"\")\n    .replaceAll(\"Æ\", \"AE\")\n    .replaceAll(\"Ð\", \"D\")\n    .replaceAll(\"Ø\", \"O\")\n    .replaceAll(\"Þ\", \"TH\")\n    .replaceAll(\"ß\", \"ss\")\n    .replaceAll(\"ð\", \"d\")\n    .replaceAll(\"æ\", \"ae\")\n    .replaceAll(\"ø\", \"o\")\n    .replaceAll(\"þ\", \"th\")\n    .replaceAll(\"Œ\", \"OE\")\n    .replaceAll(\"œ\", \"oe\")\n    .replaceAll(\"ƒ\", \"f\")\n\t.trim().split(\" \")\n    \n\n val shortName \u003d  if (normname.length \u003d\u003d 1) normname(0) else normname(0).take(1) + normname(normname.length-1)\n shortName\n\n    \n})\n\nspark.udf.register(\"shortNormName\", shortNormName)\n\nval normName \u003d udf[String, String]((e:String) \u003d\u003e {\n    \n org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n     .replaceAll(\"[ \u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+‐–*\\\\\\\\-]+\", \"\")\n    .replaceAll(\"Æ\", \"AE\")\n    .replaceAll(\"Ð\", \"D\")\n    .replaceAll(\"Ø\", \"O\")\n    .replaceAll(\"Þ\", \"TH\")\n    .replaceAll(\"ß\", \"ss\")\n    .replaceAll(\"ð\", \"d\")\n    .replaceAll(\"æ\", \"ae\")\n    .replaceAll(\"ø\", \"o\")\n    .replaceAll(\"þ\", \"th\")\n    .replaceAll(\"Œ\", \"OE\")\n    .replaceAll(\"œ\", \"oe\")\n    .replaceAll(\"ƒ\", \"f\")\n\t.trim()\n    \n})\n\nspark.udf.register(\"normName\", normName)\n",
       "user": "anonymous",
-      "dateUpdated": "2020-12-01 11:21:25.698",
+      "dateUpdated": "2020-12-22 12:01:43.468",
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -61,7 +61,7 @@
         "msg": [
           {
             "type": "TEXT",
-            "data": "import org.apache.commons.lang3.StringUtils\nimport java.util.Locale\n\u001b[1m\u001b[34mshortNormName\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.expressions.UserDefinedFunction\u001b[0m \u003d SparkUserDefinedFunction($Lambda$3767/0x00007f6a48486040@3fd5b732,StringType,List(Some(class[value[0]: string])),None,true,true)\n\u001b[1m\u001b[34mnormName\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.expressions.UserDefinedFunction\u001b[0m \u003d SparkUserDefinedFunction($Lambda$3769/0x00007f6a48484040@73a27bbe,StringType,List(Some(class[value[0]: string])),None,true,true)\n\u001b[1m\u001b[34mres4\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.expressions.UserDefinedFunction\u001b[0m \u003d SparkUserDefinedFunction($Lambda$3769/0x00007f6a48484040@73a27bbe,StringType,List(Some(class[value[0]: string])),None,true,true)\n"
+            "data": "import org.apache.commons.lang3.StringUtils\nimport java.util.Locale\n\u001b[1m\u001b[34mshortNormName\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.expressions.UserDefinedFunction\u001b[0m \u003d SparkUserDefinedFunction($Lambda$2057/0x00007f7ebd0ef040@7e06e6b8,StringType,List(Some(class[value[0]: string])),None,true,true)\n\u001b[1m\u001b[34mnormName\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.expressions.UserDefinedFunction\u001b[0m \u003d SparkUserDefinedFunction($Lambda$2148/0x00007f7ebcce9040@22a513e5,StringType,List(Some(class[value[0]: string])),None,true,true)\n\u001b[1m\u001b[34mres1\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.expressions.UserDefinedFunction\u001b[0m \u003d SparkUserDefinedFunction($Lambda$2148/0x00007f7ebcce9040@22a513e5,StringType,List(Some(class[value[0]: string])),None,true,true)\n"
           }
         ]
       },
@@ -71,8 +71,8 @@
       "jobName": "paragraph_1606722812184_1774544506",
       "id": "paragraph_1606722812184_1774544506",
       "dateCreated": "2020-11-30 09:53:32.184",
-      "dateStarted": "2020-12-01 11:21:25.701",
-      "dateFinished": "2020-12-01 11:21:25.929",
+      "dateStarted": "2020-12-22 12:01:43.476",
+      "dateFinished": "2020-12-22 12:01:52.193",
       "status": "FINISHED"
     },
     {
@@ -260,9 +260,9 @@
       "status": "FINISHED"
     },
     {
-      "text": "%spark\nval MAG_pub_authorsdf \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/MAG_pub_authors.parquet\")\n\nMAG_pub_authorsdf.show(20)\nMAG_pub_authorsdf.printSchema()\nprintln(\"MAG_pub_authorsdf  cnt:\"+MAG_pub_authorsdf.count())\n\n//661546284\n//653044459\n//661546284\n\n",
+      "text": "%spark\nval MAG_pub_authorsdf \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/MAG_pub_authors.parquet\")\n\nMAG_pub_authorsdf.show(20)\nMAG_pub_authorsdf.printSchema()\nprintln(\"MAG_pub_authorsdf  cnt:\"+MAG_pub_authorsdf.count())\n\n\n\n//661546284\n//653044459\n//661546284\n\n",
       "user": "anonymous",
-      "dateUpdated": "2020-12-02 12:23:01.222",
+      "dateUpdated": "2020-12-15 00:16:31.388",
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -388,9 +388,9 @@
     },
     {
       "title": "Join MAG - S2 pub-author records",
-      "text": "%spark\n\n\nimport com.github.mrpowers.spark.stringmetric.SimilarityFunctions._\nimport com.github.mrpowers.spark.stringmetric.PhoneticAlgorithms._\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\nval MAG_pub_authors1 \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/MAG_pub_authors.parquet\")\n//MAG_pub_authors1.printSchema()\n\n\n\n//MAG_pub_authors.repartition(500,\"\")\n//println(MAG_pub_authors.rdd.getNumPartitions)\n//println(\"Join_Mag_auth_pubCnt:\"+MAG_pub_authors.count())\n//MAG_pub_authors.write.format(\"parquet\").bucketBy(100, \"MAGpaperId\").sortBy(\"shortNormName\").saveAsTable(\"MAG_pub_authors_bucket\")\n//MAG_pub_authorsdf.write.bucketBy(100, \"MAGpaperId\").sortBy(\"shortNormName\").parquet(\"/media/datadisk/Datasets/MAG_S2/MAG_pub_authors_bucket.parquet\")                    \n\n\nval S2_Pub_Authors1 \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_Pub_Authors.parquet\").withColumn(\"magId\",col(\"magId\").cast(LongType)).withColumnRenamed(\"magId\", \"MAGpaperId\")\n//S2_Pub_Authors1.printSchema()\n//println(S2_Pub_Authors.rdd.getNumPartitions)\n//S2_Pub_Authorsdf.write.format(\"parquet\").bucketBy(100, \"magId\").sortBy(\"S2shortNormName\").saveAsTable(\"S2_pub_authors_bucket\")\n\n\n//val MAG_pub_authorsdf \u003d spark.table(\"MAG_pub_authors_bucket\")\n//println(\"Join_Mag_auth_pubCnt:\"+MAG_pub_authorsdf.count())\n\n//val S2_Pub_Authors \u003d spark.table(\"S2_pub_authors_bucket\")\n//println(\"Join_S2_auth_pubCnt:\"+MAG_pub_authorsdf.count())\n\n\nval MAG_pub_authors \u003d MAG_pub_authors1.repartition(500, MAG_pub_authors1.col(\"MAGpaperId\"))\nval S2_Pub_Authors \u003d S2_Pub_Authors1.repartition(500, S2_Pub_Authors1.col(\"MAGpaperId\"))\n\n\nval S2_MAG_df \u003d MAG_pub_authors\n                   .join(S2_Pub_Authors, S2_Pub_Authors(\"MAGpaperId\") \u003d\u003d\u003d MAG_pub_authors(\"MAGpaperId\")  \u0026\u0026 ( S2_Pub_Authors(\"S2shortNormName\")\u003d\u003d\u003dMAG_pub_authors(\"shortNormName\")  || ( levenshtein($\"normName\", $\"S2normName\")\u003e0.8  \u0026\u0026 double_metaphone($\"normName\") \u003d\u003d\u003d double_metaphone($\"S2normName\") ) ), \"left_outer\")                  \n                   //MAG_pub_authorsdf(\"MAGtitle\"), \n                   .select(MAG_pub_authors(\"MAGpaperId\"), MAG_pub_authors(\"MAGdoi\"),  MAG_pub_authors(\"MAGname\").as(\"MAGdisplayName\"), MAG_pub_authors(\"MAGnormName\").as(\"MAGname\"), MAG_pub_authors(\"normName\").as(\"MAGnormName\"), \n                            MAG_pub_authors(\"shortNormName\").as(\"MAGshortNormName\"),  MAG_pub_authors(\"MAGauthorId\"), MAG_pub_authors(\"fosids\"), MAG_pub_authors(\"fosids_lvl0\") ,MAG_pub_authors(\"fosids_lvl1\"), \n                            MAG_pub_authors(\"authorIds\"), MAG_pub_authors(\"authorNormNames\"), MAG_pub_authors(\"authorShortNormNames\"),MAG_pub_authors(\"affiliationIds\"), \n                            S2_Pub_Authors(\"S2authorId\"),S2_Pub_Authors(\"S2paperId\"), S2_Pub_Authors(\"S2doi\"), S2_Pub_Authors(\"S2name\"), S2_Pub_Authors(\"S2shortNormName\"), S2_Pub_Authors(\"S2normName\"), S2_Pub_Authors(\"S2fos\") )\n                  // .persist(StorageLevel.DISK_ONLY)\n\n//S2_MAG_df.show(10)\n//println(\"Join_S2_Mag_auth_pubCnt:\"+S2_MAG_df.count())\nS2_MAG_df.write.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_df.parquet\")\n\n",
+      "text": "%spark\n\n\nimport com.github.mrpowers.spark.stringmetric.SimilarityFunctions._\nimport com.github.mrpowers.spark.stringmetric.PhoneticAlgorithms._\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\n//NonNVME Took 9 hrs 12 min 44 sec. Last updated by anonymous at December 04 2020, 6:09:13 AM.\n//Took 2 hrs 36 min 12 sec. Last updated by anonymous at December 14 2020, 5:04:52 PM.\n\n\nval MAG_pub_authors1 \u003d spark.read.parquet(\"/media/ometaxas/nvme/datasets/MAG_S2/MAG_pub_authors.parquet\")\n//MAG_pub_authors1.printSchema()\n\n\n\n//MAG_pub_authors.repartition(500,\"\")\n//println(MAG_pub_authors.rdd.getNumPartitions)\n//println(\"Join_Mag_auth_pubCnt:\"+MAG_pub_authors.count())\n//MAG_pub_authors.write.format(\"parquet\").bucketBy(100, \"MAGpaperId\").sortBy(\"shortNormName\").saveAsTable(\"MAG_pub_authors_bucket\")\n//MAG_pub_authorsdf.write.bucketBy(100, \"MAGpaperId\").sortBy(\"shortNormName\").parquet(\"/media/datadisk/Datasets/MAG_S2/MAG_pub_authors_bucket.parquet\")                    \n\n\nval S2_Pub_Authors1 \u003d spark.read.parquet(\"/media/ometaxas/nvme/datasets/MAG_S2/S2_Pub_Authors.parquet\").withColumn(\"magId\",col(\"magId\").cast(LongType)).withColumnRenamed(\"magId\", \"MAGpaperId\")\n//S2_Pub_Authors1.printSchema()\n//println(S2_Pub_Authors.rdd.getNumPartitions)\n//S2_Pub_Authorsdf.write.format(\"parquet\").bucketBy(100, \"magId\").sortBy(\"S2shortNormName\").saveAsTable(\"S2_pub_authors_bucket\")\n\n\n//val MAG_pub_authorsdf \u003d spark.table(\"MAG_pub_authors_bucket\")\n//println(\"Join_Mag_auth_pubCnt:\"+MAG_pub_authorsdf.count())\n\n//val S2_Pub_Authors \u003d spark.table(\"S2_pub_authors_bucket\")\n//println(\"Join_S2_auth_pubCnt:\"+MAG_pub_authorsdf.count())\n\n//repartitioning to avoid huge shuffling and speed-up sort-merge join \nval MAG_pub_authors \u003d MAG_pub_authors1.repartition(500, MAG_pub_authors1.col(\"MAGpaperId\"))\nval S2_Pub_Authors \u003d S2_Pub_Authors1.repartition(500, S2_Pub_Authors1.col(\"MAGpaperId\"))\n\n\nval S2_MAG_df \u003d MAG_pub_authors\n                   .join(S2_Pub_Authors, S2_Pub_Authors(\"MAGpaperId\") \u003d\u003d\u003d MAG_pub_authors(\"MAGpaperId\")  \u0026\u0026 ( S2_Pub_Authors(\"S2shortNormName\")\u003d\u003d\u003dMAG_pub_authors(\"shortNormName\")  || (jaro_winkler($\"normName\", $\"S2normName\") \u003e 0.82 \u0026\u0026 levenshtein($\"normName\", $\"S2normName\")\u003c3  \u0026\u0026 soundex($\"normName\") \u003d\u003d\u003d soundex($\"S2normName\") ) ), \"left_outer\")                  \n                   //MAG_pub_authorsdf(\"MAGtitle\"), \n                   .select(MAG_pub_authors(\"MAGpaperId\"), MAG_pub_authors(\"MAGdoi\"),  MAG_pub_authors(\"MAGname\").as(\"MAGdisplayName\"), MAG_pub_authors(\"MAGnormName\").as(\"MAGname\"), MAG_pub_authors(\"normName\").as(\"MAGnormName\"), \n                            MAG_pub_authors(\"shortNormName\").as(\"MAGshortNormName\"),  MAG_pub_authors(\"MAGauthorId\"), MAG_pub_authors(\"fosids\"), MAG_pub_authors(\"fosids_lvl0\") ,MAG_pub_authors(\"fosids_lvl1\"), \n                            MAG_pub_authors(\"authorIds\"), MAG_pub_authors(\"authorNormNames\"), MAG_pub_authors(\"authorShortNormNames\"),MAG_pub_authors(\"affiliationIds\"), \n                            S2_Pub_Authors(\"S2authorId\"),S2_Pub_Authors(\"S2paperId\"), S2_Pub_Authors(\"S2doi\"), S2_Pub_Authors(\"S2name\"), S2_Pub_Authors(\"S2shortNormName\"), S2_Pub_Authors(\"S2normName\"), S2_Pub_Authors(\"S2fos\") )\n                            .dropDuplicates()\n                            // .persist(StorageLevel.DISK_ONLY)\n\n//S2_MAG_df.show(10)\n//println(\"Join_S2_Mag_auth_pubCnt:\"+S2_MAG_df.count())\nS2_MAG_df.write.parquet(\"/media/ometaxas/nvme/datasets/MAG_S2/S2_MAG_df.parquet\")\n\n",
       "user": "anonymous",
-      "dateUpdated": "2020-12-03 20:56:29.118",
+      "dateUpdated": "2020-12-16 13:16:06.862",
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -427,13 +427,13 @@
           "group": "spark",
           "values": [
             {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d0"
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d0"
             },
             {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d1"
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d1"
             },
             {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d2"
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d2"
             }
           ],
           "interpreterSettingId": "spark"
@@ -443,14 +443,140 @@
       "jobName": "paragraph_1605993979140_229979962",
       "id": "paragraph_1605993979140_229979962",
       "dateCreated": "2020-11-21 23:26:19.141",
-      "dateStarted": "2020-12-03 20:56:29.125",
-      "dateFinished": "2020-12-04 06:09:13.291",
+      "dateStarted": "2020-12-16 13:16:06.871",
+      "dateFinished": "2020-12-16 15:27:08.928",
       "status": "FINISHED"
     },
     {
-      "text": "%spark\nimport org.apache.spark.sql.functions.countDistinct;\nval S2_MAG_df \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_df.parquet\").filter($\"S2doi\"\u003d!\u003d\"\"  \u0026\u0026 $\"S2doi\".isNotNull \u0026\u0026 $\"S2doi\"\u003d!\u003d$\"MAGdoi\").select($\"S2doi\")\n\nS2_MAG_df.cache()\n\nprintln(\"s2doi diffs cnt:\"+S2_MAG_df.count())\n//println(\"s2doi diffs cnt:\"+S2_MAG_df.distinct($\"S2doi\").count())\n\nS2_MAG_df.show(50)\n\nval df3 \u003d S2_MAG_df.select(countDistinct(\"S2doi\"))\ndf3.show(false)\n\nval orcid_df \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/orcid.parquet\")\n.cache()\n\n\norcid_df.printSchema\nprintln(\"ORCiD cnt:\" + orcid_df.count())\norcid_df.show(40)\n\n\n\n",
+      "title": "Analyze \u0026 remove false positives (double matches)",
+      "text": "%spark\nimport org.apache.spark.sql.functions.countDistinct;\nimport org.apache.spark.storage.StorageLevel;\n\nval S2_MAG_df \u003d spark.read.parquet(\"/media/ometaxas/nvme/datasets/MAG_S2/S2_MAG_df.parquet\")\n//val df3 \u003d S2_MAG_df.select(countDistinct($\"MAGpaperId\", $\"MAGauthorId\"))\n//df3.show(false)\n\n/*\nval S2_MAG_grp_df \u003d S2_MAG_df\n                .groupBy($\"MAGpaperId\", $\"MAGauthorId\")\n                //.agg(count(\"S2authorId\").as(\"S2authorCnt\"), collect_list(S2_MAG_df(\"S2authorId\")).as(\"S2authorIds\"), collect_set(S2_MAG_df(\"S2paperId\")).as(\"S2paperIds\"), collect_list(S2_MAG_df(\"S2name\")).as(\"S2names\"), collect_list(S2_MAG_df(\"S2shortNormName\")).as(\"S2shortNormNames\"), collect_list(S2_MAG_df(\"S2normName\")).as(\"S2normNames\") )\n                .where($\"S2authorCnt\"\u003e1)\n                .persist(StorageLevel.DISK_ONLY)\n                */\n\nval S2_MAG_fp_df \u003d S2_MAG_df\n                .groupBy($\"MAGpaperId\", $\"MAGauthorId\")\n                //.agg(count(\"S2authorId\").as(\"S2authorCnt\"))\n                .agg(count(\"S2authorId\").as(\"S2authorCnt\")\n                , collect_list(S2_MAG_df(\"S2authorId\")).as(\"S2authorIds\"), collect_set(S2_MAG_df(\"S2paperId\")).as(\"S2paperIds\"), collect_list(S2_MAG_df(\"S2name\")).as(\"S2names\"), collect_list(S2_MAG_df(\"S2shortNormName\")).as(\"S2shortNormNames\"), collect_list(S2_MAG_df(\"S2normName\")).as(\"S2normNames\") )\n                .where($\"S2authorCnt\"\u003e1)\n  //              .persist(StorageLevel.DISK_ONLY)\n\n//println(\"S2_MAG_fp_df cnt:\" + S2_MAG_fp_df.count())\n//S2_MAG_fp_df.show(50)\n//S2_MAG_fp_df.limit(200).coalesce(1).write.json(\"/media/ometaxas/nvme/datasets/MAG_S2/doubleMatch.json\")\n\nval S2_MAG_nonDoubles\u003d S2_MAG_df.join(broadcast(S2_MAG_fp_df), S2_MAG_df(\"MAGpaperId\") \u003d\u003d\u003d S2_MAG_fp_df(\"MAGpaperId\") \u0026\u0026 S2_MAG_df(\"MAGauthorId\") \u003d\u003d\u003d S2_MAG_fp_df(\"MAGauthorId\") \u0026\u0026 S2_MAG_df(\"S2normName\")\u003d!\u003dS2_MAG_df(\"MAGnormName\"), \"leftanti\")\n\nS2_MAG_nonDoubles.write.parquet(\"/media/ometaxas/nvme/datasets/MAG_S2/S2_MAG_NFP_df.parquet\")\n\n//.coalesce(1).write.csv(\"PaperReferenceswithDOIs.csv\")\n//661546284\n\n//val S2_MAG_Orciddf \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_Orcid.parquet\").dropDuplicates()\n//802561855\n//println(\"S2_MAG cnt:\" + S2_MAG_df.count())\n\n//val S2_MAG_df1 \u003d spark.read.parquet(\"/media/ometaxas/nvme/datasets/MAG_S2/S2_MAG_df.parquet\").dropDuplicates()\n//val S2_MAG_Orciddf \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_Orcid.parquet\").dropDuplicates()\n\n//println(\"S2_MAG1 cnt:\" + S2_MAG_df1.count())\n\n",
       "user": "anonymous",
-      "dateUpdated": "2020-12-04 13:30:43.001",
+      "dateUpdated": "2020-12-17 21:17:34.047",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "import org.apache.spark.sql.functions.countDistinct\nimport org.apache.spark.storage.StorageLevel\n\u001b[1m\u001b[34mS2_MAG_df\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m \u003d [MAGpaperId: bigint, MAGdoi: string ... 19 more fields]\n\u001b[1m\u001b[34mS2_MAG_fp_df\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [MAGpaperId: bigint, MAGauthorId: bigint ... 6 more fields]\n\u001b[1m\u001b[34mS2_MAG_nonDoubles\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m \u003d [MAGpaperId: bigint, MAGdoi: string ... 19 more fields]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d0"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d2"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1607966825569_667439463",
+      "id": "paragraph_1607966825569_667439463",
+      "dateCreated": "2020-12-14 19:27:05.569",
+      "dateStarted": "2020-12-17 21:17:34.051",
+      "dateFinished": "2020-12-17 22:36:01.971",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\nval S2_MAG_df \u003d spark.read.parquet(\"/media/ometaxas/nvme/datasets/MAG_S2/S2_MAG_NFP_df.parquet\")\nprintln(\"S2_MAG_fp_df cnt:\" + S2_MAG_df.count())\n\nval MAG_pub_authors \u003d spark.read.parquet(\"/media/ometaxas/nvme/datasets/MAG_S2/MAG_pub_authors.parquet\")\nprintln(\"MAG_pub_authors cnt:\" + MAG_pub_authors.count())\n\nval S2_MAG_fp_df \u003d S2_MAG_df\n                .groupBy($\"MAGpaperId\", $\"MAGauthorId\")\n                //.agg(count(\"S2authorId\").as(\"S2authorCnt\"))\n                .agg(count(\"S2authorId\").as(\"S2authorCnt\")\n                , collect_list(S2_MAG_df(\"S2authorId\")).as(\"S2authorIds\"), collect_set(S2_MAG_df(\"S2paperId\")).as(\"S2paperIds\"), collect_list(S2_MAG_df(\"S2name\")).as(\"S2names\"), collect_list(S2_MAG_df(\"S2shortNormName\")).as(\"S2shortNormNames\"), collect_list(S2_MAG_df(\"S2normName\")).as(\"S2normNames\") )\n                .where($\"S2authorCnt\"\u003e1)\n  //              .persist(StorageLevel.DISK_ONLY)\n\nprintln(\"S2_MAG_fp_df cnt:\" + S2_MAG_fp_df.count())\nS2_MAG_fp_df.show(50)",
+      "user": "anonymous",
+      "dateUpdated": "2020-12-18 11:43:31.882",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "S2_MAG_fp_df cnt:661555458\nMAG_pub_authors cnt:661546284\nS2_MAG_fp_df cnt:22572\n+----------+-----------+-----------+--------------------+--------------------+----------------------------------+------------------------------------+------------------------------------+\n|MAGpaperId|MAGauthorId|S2authorCnt|         S2authorIds|          S2paperIds|                           S2names|                    S2shortNormNames|                         S2normNames|\n+----------+-----------+-----------+--------------------+--------------------+----------------------------------+------------------------------------+------------------------------------+\n|  20661002| 2710583340|          2|[123574337, 15284...|[505d6b91d4d8eccd...|              [S. A. Esenwein, ...|                [saesenwein, saes...|                [saesenwein, saes...|\n| 126782910| 2040504706|          2|  [9893644, 9893644]|[e5116ea3e072a25e...|              [E  Micskey, E  m...|                [emicskey, emicskey]|                [emicskey, emicskey]|\n| 137887807| 2798965977|          2|[47350275, 94027571]|[5433fe6d45465114...|              [Tong Bou Chang, ...|                [tongbouchang, to...|                [tongbouchang, to...|\n| 180803647| 2799108605|          2|[1717720, 116617877]|[050335611ede6443...|              [Bert  Bredeweg, ...|                [bertbredeweg, be...|                [bertbredeweg, be...|\n| 349375651| 2798603694|          2|[102543633, 10254...|[0c34c7c0c58bfc1c...|              [DongSheng  Cai, ...|                [dongshengcai, do...|                [dongshengcai, do...|\n| 612093272|  767547022|          2|[1517706994, 1211...|[8265f83afca14996...|              [René  Marill-Alb...|                [renemarillalbere...|                [renemarillalbere...|\n|1419261065| 2304264947|          2|[145669210, 49810...|[ea8746343d5468ed...|              [Jing  Zhao, Jing...|                [jingzhao, jingzhao]|                [jingzhao, jingzhao]|\n|1518725847| 2158730666|          2|[102824760, 2016565]|[c2b3eca539b0de2c...|               [X. C. Ai, X.  Cai]|                        [xcai, xcai]|                        [xcai, xcai]|\n|1576686720| 1495125403|          2|[8601667, 153716451]|[df6b96b21ed60f8e...|              [Fusun  Terzioglu...|                [fusunterzioglu, ...|                [fusunterzioglu, ...|\n|2040361590| 2708340918|          2|[144205241, 46358...|[4be81fa864bd0095...|              [Yong-Hee  Lee, Y...|                [yongheelee, yong...|                [yongheelee, yong...|\n|2049881188| 2150692620|          2|[1406217098, 1415...|[0af58d8d8f73b7cf...|              [A.  Benedict-Smi...|                [abenedictsmith, ...|                [abenedictsmith, ...|\n|2066064217| 2422599529|          2|[30656455, 40763550]|[48e2aaa2a73fa892...|                  [H  Liu, H  Liu]|                        [hliu, hliu]|                        [hliu, hliu]|\n|2086268862| 2955868898|          2|[1381476799, 1381...|[981a27c154463da4...|              [Matazō  Nakamura...|                [matazonakamura, ...|                [matazonakamura, ...|\n|2102741013| 2614473931|          2|[1397734263, 3769...|[ea25420fe1377474...|              [Montserrat  Fern...|                [montserratfernan...|                [montserratfernan...|\n|2157615379| 3071274946|          2|[40040138, 82737783]|[4223b24fd581da23...|              [B  Fazekas, B  F...|                [bfazekas, bfazekas]|                [bfazekas, bfazekas]|\n|2189363957| 2158413771|          2|  [2358316, 2358316]|[0b6bc0aad4556e16...|              [Michael L. Mcclo...|                [michaellmccloud,...|                [michaellmccloud,...|\n|2277999768| 2589662123|          2|[145013775, 14501...|[0d67d78292ab9977...|              [M. H. Kelsey, Mh...|                [mhkelsey, mhkelsey]|                [mhkelsey, mhkelsey]|\n|2286060689| 2634755614|          2|[12851951, 81834832]|[9292e1ec3bdc7287...|              [Caroline  Rodige...|                [carolinerodiger,...|                [carolinerodiger,...|\n|2320033781| 2806874430|          2|[21054950, 48923451]|[509ece859b1f26c1...|              [Adam  Łomnicki, ...|                [adamlomnicki, ad...|                [adamlomnicki, ad...|\n|2330406974| 2179583944|          2|[12048527, 50225403]|[af903c4d9a97ca27...|              [Conor Mc Donnell...|                [conormcdonnell, ...|                [conormcdonnell, ...|\n|2331288455| 2316387883|          2|[1402125223, 1402...|[abb80fbf453ab354...|              [R. P. Prŷs-Jones...|                [rpprysjones, rpp...|                [rpprysjones, rpp...|\n|2337723696| 2745435675|          2|[1422366904, 8738...|[a0484ac015ee227c...|              [Oswaldo  Téllez-...|                [oswaldotellezval...|                [oswaldotellezval...|\n|2344183039| 2953996510|          2|[3695872, 153291251]|[a5293bb4f17ad25a...|              [Jong in Jeong, J...|                [jonginjeong, jon...|                [jonginjeong, jon...|\n|2416395560| 2098161725|          2|[1421526929, 4759...|[5c941bf9459e7de3...|              [Karen  Heinicke-...|                [karenheinickemot...|                [karenheinickemot...|\n|2417516629| 2154747353|          2| [2653796, 77874645]|[2c1ad11381bed033...|                [S H Kim, S H Kim]|                      [shkim, shkim]|                      [shkim, shkim]|\n|2417945157| 2887364982|          2|[35540828, 35540828]|[e1f913f174700922...|              [F.  Forlani, F  ...|                [fforlani, fforlani]|                [fforlani, fforlani]|\n|2488976941| 2633660538|          2| [50228835, 2517840]|[465a67214ccdb221...|              [David C. Mohr, D...|                [davidcmohr, davi...|                [davidcmohr, davi...|\n|2498885674| 2464788806|          2|[65784997, 140086...|[3f8abb2c36529164...|              [M Patricio Bordo...|                [mpatriciobordoma...|                [mpatriciobordoma...|\n|2547042232| 1206025882|          2| [5537117, 46570827]|[250c1f24a22bcb81...|              [Victoria  Aramă,...|                [victoriaarama, v...|                [victoriaarama, v...|\n|2551953272| 2531353584|          2|[121990125, 12199...|[1bd1d127f46a7d6c...|              [Ap  Wagner, A. P...|                [apwagner, apwagner]|                [apwagner, apwagner]|\n|2575867068| 2974129498|          2|[38711037, 81463314]|[40c3bba6382e2223...|              [A. Lopez Sierra,...|                [alopezsierra, al...|                [alopezsierra, al...|\n|2584558268| 2602747806|          2|[21183301, 33436501]|[3314e45d366d5eca...|              [Robert B McMaste...|                [robertbmcmaster,...|                [robertbmcmaster,...|\n|2596658886| 2144028017|          2|[144004569, 47514...|[36115e26e3d13078...|              [Horng-Huei  Liou...|                [hornghueiliou, h...|                [hornghueiliou, h...|\n|2598488115| 2651890893|          2|[1401778744, 1401...|[4e8d481fa09a55cf...|              [Olga  Warszawik-...|                [olgawarszawikhen...|                [olgawarszawikhen...|\n|2602975011| 2776814044|          2|[16342459, 16342459]|[ae45f3d9fbe21a8a...|              [Natale G. De San...|                [natalegdesanto, ...|                [natalegdesanto, ...|\n|2602985057| 2790555621|          2|[1398852892, 4119...|[a860fe36d1d81ca3...|              [Becky  Kochender...|                [beckykochenderfe...|                [beckykochenderfe...|\n|2604117255| 2466067486|          2|[31926389, 31926389]|[cf2d2bb2f6dc4b07...|              [H  Walti, H.  Wa...|                    [hwalti, hwalti]|                    [hwalti, hwalti]|\n|2607591937| 1665915573|          2|[1419267294, 1419...|[de43a348a72ae2f5...|              [D.  Curri, D  Cu...|                    [dcurri, dcurri]|                    [dcurri, dcurri]|\n|2612474156| 2614078512|          2|[134746637, 13474...|[e79dca095bb11459...|              [Silvânia Maria M...|                [silvaniamariamen...|                [silvaniamariamen...|\n|2612759969| 2603294657|          2|[153114263, 15311...|[d86df48770c56c7a...|              [G  Madeddu, G.  ...|                [gmadeddu, gmadeddu]|                [gmadeddu, gmadeddu]|\n|2682097371| 2605311250|          2|[52269778, 52424601]|[cf06871d8acebfb1...|              [Ken  Fredric, Ke...|                [kenfredric, kenf...|                [kenfredric, kenf...|\n|2731935347| 2605311250|          2|[52269778, 52424601]|[d03dbf9db5381356...|              [Ken  Fredric, Ke...|                [kenfredric, kenf...|                [kenfredric, kenf...|\n|2737048791| 2738022109|          2|[133945727, 13394...|[e5038097679d6e39...|              [F  Castello, F. ...|                [fcastello, fcast...|                [fcastello, fcast...|\n|2745029899| 2744021432|          2|[152302837, 15230...|[9b32c952fba83d55...|              [G.  Zagone, G  Z...|                  [gzagone, gzagone]|                  [gzagone, gzagone]|\n|2745100979| 2744380440|          2|[144378987, 14806...|[13781db0dd710394...|              [Shinichi  Ishizu...|                [shinichiishizuka...|                [shinichiishizuka...|\n|2747467189|  902994901|          2|[104213331, 10421...|[d84d14962a969442...|              [S.  Bonafede, S ...|                [sbonafede, sbona...|                [sbonafede, sbona...|\n|2752736782| 2627177537|          2|[52269778, 52424601]|[69ef2f1f3f91f2a3...|              [Ken  Fredric, Ke...|                [kenfredric, kenf...|                [kenfredric, kenf...|\n|2754521464| 2754360447|          2|[1435134708, 1435...|[7a2829b2c97d6e0c...|[チャールズリチャード  キェルボ...|[チャールズリチャードキェルホ...|[チャールズリチャードキェルホ...|\n|2755700943| 2487235663|          2|[70949697, 70949697]|[abbee551e4c85f7e...|              [AM Van Roon, AM ...|                [amvanroon, amvan...|                [amvanroon, amvan...|\n|2760938022| 2707998314|          2|[50135652, 12135788]|[f946d8eb7985ea7f...|                [Wen  Li, Wen  Li]|                      [wenli, wenli]|                      [wenli, wenli]|\n+----------+-----------+-----------+--------------------+--------------------+----------------------------------+------------------------------------+------------------------------------+\nonly showing top 50 rows\n\n\u001b[1m\u001b[34mS2_MAG_df\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m \u003d [MAGpaperId: bigint, MAGdoi: string ... 19 more fields]\n\u001b[1m\u001b[34mMAG_pub_authors\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m \u003d [MAGtitle: string, MAGpaperId: bigint ... 13 more fields]\n\u001b[1m\u001b[34mS2_MAG_fp_df\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [MAGpaperId: bigint, MAGauthorId: bigint ... 6 more fields]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d9"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d10"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d11"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d12"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d13"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d14"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1608225348746_1833133501",
+      "id": "paragraph_1608225348746_1833133501",
+      "dateCreated": "2020-12-17 19:15:48.747",
+      "dateStarted": "2020-12-18 11:43:31.885",
+      "dateFinished": "2020-12-18 11:55:17.781",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\nimport org.apache.spark.sql.functions.countDistinct;\nval S2_MAG_df \u003d spark.read.parquet(\"/media/ometaxas/nvme/datasets/MAG_S2/S2_MAG_df.parquet\")//.filter($\"S2doi\"\u003d!\u003d\"\"  \u0026\u0026 $\"S2doi\".isNotNull \u0026\u0026 $\"S2doi\"\u003d!\u003d$\"MAGdoi\").select($\"S2doi\")\n\n//S2_MAG_df.cache()\n\nprintln(\"s2doi diffs cnt:\"+S2_MAG_df.count())\n//println(\"s2doi diffs cnt:\"+S2_MAG_df.distinct($\"S2doi\").count())\n\nS2_MAG_df.show(50)\n\nval df3 \u003d S2_MAG_df.select(countDistinct(\"S2doi\"))\ndf3.show(false)\n\nval orcid_df \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/orcid.parquet\")\n.cache()\n\n\norcid_df.printSchema\nprintln(\"ORCiD cnt:\" + orcid_df.count())\norcid_df.show(40)\n\n\n\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-12-14 19:28:42.545",
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -514,9 +640,9 @@
     },
     {
       "title": "Join ORCiD Data with MAG \u0026 S2 (based on MAG_doi)",
-      "text": "%spark\n\nimport com.github.mrpowers.spark.stringmetric.SimilarityFunctions._\nimport com.github.mrpowers.spark.stringmetric.PhoneticAlgorithms._\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\n\n\n//val jsondf \u003d spark.read.json(\"/media/datadisk/Datasets/ORCiD/9988322/ORCID_2019_summaries/outgz/0.gz\")\nval orcid_df \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/orcid.parquet\")\n.cache()\n\n\n//orcid_df.printSchema\n//println(\"ORCiD cnt:\" + orcid_df.count())\n//orcid_df.show(40)\n\n\nval S2_MAG_df \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_df.parquet\")\n//.cache()\n\n//S2_MAG_df.groupBy($\"S2doi\").show(10)\n\n//S2_MAG_df.filter($\"S2doi\"\u003d!\u003d\"\"  \u0026\u0026 $\"S2doi\".isNotNull \u0026\u0026 $\"S2doi\"\u003d!\u003d$\"MAGdoi\")\n//.cache()\n\n//println(\"s2doi diffs cnt:\"+S2_MAG_df.count())\n\n\n//println(\"s2doi diffs cnt:\"+S2_MAG_Orcid_df\n//S2_MAG_df.filter($\"S2doi\"\u003d!\u003d\"\"  \u0026\u0026 ($\"magId\".isNotNull) \u0026\u0026 $\"S2doi\"\u003d!\u003d$\"MAGdoi\")\n\n\nval S2_MAG_Orcid_df1 \u003d S2_MAG_df\n                    //trying to match either S2doi or MAGdoi (REMARK: matching also with S2dois give us 2743 more author - pub records (on top of the 49376386 which we matched using MAGdoi) which is a small gain comparing to the matches with MAGdoi\n                   .join(broadcast(orcid_df), (S2_MAG_df(\"MAGdoi\") \u003d\u003d\u003d orcid_df(\"doi\") || S2_MAG_df(\"S2doi\") \u003d\u003d\u003d orcid_df(\"doi\") )\u0026\u0026 ( S2_MAG_df(\"S2shortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\") ||  S2_MAG_df(\"MAGshortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\") ||  levenshtein($\"MAGnormName\", $\"ORCnormName\")\u003e0.8  \u0026\u0026 double_metaphone($\"MAGnormName\") \u003d\u003d\u003d double_metaphone($\"ORCnormName\") ) \n                   , \"left_outer\")       \n                     .select(S2_MAG_df(\"MAGpaperId\"), S2_MAG_df(\"MAGdoi\"),  S2_MAG_df(\"MAGdisplayName\"), S2_MAG_df(\"MAGname\"), S2_MAG_df(\"MAGnormName\"), \n                            S2_MAG_df(\"MAGshortNormName\"),  S2_MAG_df(\"MAGauthorId\"), S2_MAG_df(\"fosids\"), S2_MAG_df(\"fosids_lvl0\") ,S2_MAG_df(\"fosids_lvl1\"), \n                            S2_MAG_df(\"authorIds\"), S2_MAG_df(\"authorNormNames\"), S2_MAG_df(\"authorShortNormNames\"),S2_MAG_df(\"affiliationIds\"), \n                            S2_MAG_df(\"S2authorId\"),S2_MAG_df(\"S2paperId\"), S2_MAG_df(\"S2doi\"), S2_MAG_df(\"S2name\"), S2_MAG_df(\"S2shortNormName\"), S2_MAG_df(\"S2normName\"), S2_MAG_df(\"S2fos\") , orcid_df(\"orcId\"))\n                            \n                   \nS2_MAG_Orcid_df1.write.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_Orcid.parquet\")      \n\n/*\n\nval S2_MAG_Orcid_df2 \u003d S2_MAG_df.filter($\"S2doi\"\u003d!\u003d\"\"  \u0026\u0026 $\"S2doi\".isNotNull \u0026\u0026 $\"S2doi\"\u003d!\u003d$\"MAGdoi\")\n                   .join(broadcast(orcid_df), S2_MAG_df(\"MAGdoi\") \u003d\u003d\u003d orcid_df(\"doi\") \u0026\u0026 ( S2_MAG_df(\"S2shortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\") ||  S2_MAG_df(\"MAGshortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\")   \n                     || (levenshtein(fulltrim($\"MAGname\"), fulltrim($\"orcfullname\"))\u003e0.8  \u0026\u0026 double_metaphone(fulltrim($\"MAGname\")) \u003d\u003d\u003d double_metaphone(fulltrim($\"orcfullname\")) ) \n                   ), \"left_outer\")       \n                     .select(S2_MAG_df(\"MAGpaperId\"), S2_MAG_df(\"MAGdoi\"),  S2_MAG_df(\"MAGdisplayName\"), S2_MAG_df(\"MAGname\"), S2_MAG_df(\"MAGnormName\"), \n                            S2_MAG_df(\"MAGshortNormName\"),  S2_MAG_df(\"MAGauthorId\"), S2_MAG_df(\"fosids\"), S2_MAG_df(\"fosids_lvl0\") ,S2_MAG_df(\"fosids_lvl1\"), \n                            S2_MAG_df(\"authorIds\"), S2_MAG_df(\"authorNormNames\"), S2_MAG_df(\"authorShortNormNames\"),S2_MAG_df(\"affiliationIds\"), \n                            S2_MAG_df(\"S2authorId\"),S2_MAG_df(\"S2paperId\"), S2_MAG_df(\"S2doi\"), S2_MAG_df(\"S2name\"), S2_MAG_df(\"S2shortNormName\"), S2_MAG_df(\"S2normName\"), S2_MAG_df(\"S2fos\") , orcid_df(\"orcId\"))\n                            \n                   //.persist(StorageLevel.DISK_ONLY)\n\n//S2_MAG_Orcid_df.write.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_Orcid.parquet\")      \n\nval S2_MAG_Orcid_df \u003d       S2_MAG_Orcid_df1.union(S2_MAG_Orcid_df2)\n                    .dropDuplicates()\n                    .persist(StorageLevel.DISK_ONLY)\n                    \nS2_MAG_Orcid_df.write.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_Orcid.parquet\")      \n//println(\"ACMsubset cnt:\"+ACMsubsetouter.count())\n//ACMsubsetouter.orderBy(\"MAGshortNormName\").show(100) \n\nprintln(\"Orcid pub cnt:\"+S2_MAG_Orcid_df\n.filter(($\"orcid\" \u003d!\u003d \"\") \u0026\u0026 ($\"orcid\".isNotNull)).count())\n\nval df2 \u003d S2_MAG_Orcid_df.select(countDistinct(\"orcid\"))\ndf2.show(false)\n\n\nval dfMagid \u003d S2_MAG_Orcid_df.select(countDistinct(\"MAGauthorId\"))\ndfMagid.show(false)\n\nval dfS2Id \u003d S2_MAG_Orcid_df.select(countDistinct(\"S2authorId\"))\ndfS2Id.show(false)\n*/\n              \n",
+      "text": "%spark\n\nimport com.github.mrpowers.spark.stringmetric.SimilarityFunctions._\nimport com.github.mrpowers.spark.stringmetric.PhoneticAlgorithms._\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\n\n\n//NOnvme 4 hrs 6 min 0 sec. Last updated by anonymous at December 04 2020, 7:21:43 PM. (outdated)\n\n//val jsondf \u003d spark.read.json(\"/media/datadisk/Datasets/ORCiD/9988322/ORCID_2019_summaries/outgz/0.gz\")\nval orcid_df \u003d spark.read.parquet(\"/media/ometaxas/nvme/datasets/MAG_S2/orcid.parquet\")\n.cache()\n\n\norcid_df.printSchema\nprintln(\"ORCiD cnt:\" + orcid_df.count())\norcid_df.show(40)\n\n\nval S2_MAG_df \u003d spark.read.parquet(\"/media/ometaxas/nvme/datasets/MAG_S2/S2_MAG_NFP_df.parquet\")\n//.cache()\n\n//S2_MAG_df.groupBy($\"S2doi\").show(10)\n\n//S2_MAG_df.filter($\"S2doi\"\u003d!\u003d\"\"  \u0026\u0026 $\"S2doi\".isNotNull \u0026\u0026 $\"S2doi\"\u003d!\u003d$\"MAGdoi\")\n//.cache()\n\n//println(\"s2doi diffs cnt:\"+S2_MAG_df.count())\n\n\n//println(\"s2doi diffs cnt:\"+S2_MAG_Orcid_df\n//S2_MAG_df.filter($\"S2doi\"\u003d!\u003d\"\"  \u0026\u0026 ($\"magId\".isNotNull) \u0026\u0026 $\"S2doi\"\u003d!\u003d$\"MAGdoi\")\n\n\nval S2_MAG_Orcid_df1 \u003d S2_MAG_df\n                    //trying to match either S2doi or MAGdoi (REMARK: matching also with S2dois give us 2743 more author - pub records (on top of the 49376386 which we matched using MAGdoi) which is a small gain comparing to the matches with MAGdoi\n                    .join(broadcast(orcid_df), (S2_MAG_df(\"MAGdoi\") \u003d\u003d\u003d orcid_df(\"doi\"))\u0026\u0026 ( S2_MAG_df(\"S2shortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\") ||  S2_MAG_df(\"MAGshortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\") ||  \n                    ( jaro_winkler($\"MAGnormName\", $\"ORCnormName\") \u003e 0.82 \u0026\u0026 levenshtein($\"MAGnormName\", $\"ORCnormName\")\u003c3 \u0026\u0026 soundex($\"MAGnormName\") \u003d\u003d\u003d soundex($\"ORCnormName\") ) ) \n                  // .join(broadcast(orcid_df), (S2_MAG_df(\"MAGdoi\") \u003d\u003d\u003d orcid_df(\"doi\") || S2_MAG_df(\"S2doi\") \u003d\u003d\u003d orcid_df(\"doi\") )\u0026\u0026 ( S2_MAG_df(\"S2shortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\") ||  S2_MAG_df(\"MAGshortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\") ||  levenshtein($\"MAGnormName\", $\"ORCnormName\")\u003e0.8  \u0026\u0026 double_metaphone($\"MAGnormName\") \u003d\u003d\u003d double_metaphone($\"ORCnormName\") ) \n                   , \"left_outer\")       \n                     .select(S2_MAG_df(\"MAGpaperId\"), S2_MAG_df(\"MAGdoi\"),  S2_MAG_df(\"MAGdisplayName\"), S2_MAG_df(\"MAGname\"), S2_MAG_df(\"MAGnormName\"), \n                            S2_MAG_df(\"MAGshortNormName\"),  S2_MAG_df(\"MAGauthorId\"), S2_MAG_df(\"fosids\"), S2_MAG_df(\"fosids_lvl0\") ,S2_MAG_df(\"fosids_lvl1\"), \n                            S2_MAG_df(\"authorIds\"), S2_MAG_df(\"authorNormNames\"), S2_MAG_df(\"authorShortNormNames\"),S2_MAG_df(\"affiliationIds\"), \n                            S2_MAG_df(\"S2authorId\"),S2_MAG_df(\"S2paperId\"), S2_MAG_df(\"S2doi\"), S2_MAG_df(\"S2name\"), S2_MAG_df(\"S2shortNormName\"), S2_MAG_df(\"S2normName\"), S2_MAG_df(\"S2fos\") , orcid_df(\"orcId\"))\n                            \n                   \nS2_MAG_Orcid_df1.write.parquet(\"/media/ometaxas/nvme/datasets/MAG_S2/S2_MAG_Orcid.parquet\")      \n\n/*\n\nval S2_MAG_Orcid_df2 \u003d S2_MAG_df.filter($\"S2doi\"\u003d!\u003d\"\"  \u0026\u0026 $\"S2doi\".isNotNull \u0026\u0026 $\"S2doi\"\u003d!\u003d$\"MAGdoi\")\n                   .join(broadcast(orcid_df), S2_MAG_df(\"MAGdoi\") \u003d\u003d\u003d orcid_df(\"doi\") \u0026\u0026 ( S2_MAG_df(\"S2shortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\") ||  S2_MAG_df(\"MAGshortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\")   \n                     || (levenshtein(fulltrim($\"MAGname\"), fulltrim($\"orcfullname\"))\u003e0.8  \u0026\u0026 double_metaphone(fulltrim($\"MAGname\")) \u003d\u003d\u003d double_metaphone(fulltrim($\"orcfullname\")) ) \n                   ), \"left_outer\")       \n                     .select(S2_MAG_df(\"MAGpaperId\"), S2_MAG_df(\"MAGdoi\"),  S2_MAG_df(\"MAGdisplayName\"), S2_MAG_df(\"MAGname\"), S2_MAG_df(\"MAGnormName\"), \n                            S2_MAG_df(\"MAGshortNormName\"),  S2_MAG_df(\"MAGauthorId\"), S2_MAG_df(\"fosids\"), S2_MAG_df(\"fosids_lvl0\") ,S2_MAG_df(\"fosids_lvl1\"), \n                            S2_MAG_df(\"authorIds\"), S2_MAG_df(\"authorNormNames\"), S2_MAG_df(\"authorShortNormNames\"),S2_MAG_df(\"affiliationIds\"), \n                            S2_MAG_df(\"S2authorId\"),S2_MAG_df(\"S2paperId\"), S2_MAG_df(\"S2doi\"), S2_MAG_df(\"S2name\"), S2_MAG_df(\"S2shortNormName\"), S2_MAG_df(\"S2normName\"), S2_MAG_df(\"S2fos\") , orcid_df(\"orcId\"))\n                            \n                   //.persist(StorageLevel.DISK_ONLY)\n\n//S2_MAG_Orcid_df.write.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_Orcid.parquet\")      \n\nval S2_MAG_Orcid_df \u003d       S2_MAG_Orcid_df1.union(S2_MAG_Orcid_df2)\n                    .dropDuplicates()\n                    .persist(StorageLevel.DISK_ONLY)\n                    \nS2_MAG_Orcid_df.write.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_Orcid.parquet\")      \n//println(\"ACMsubset cnt:\"+ACMsubsetouter.count())\n//ACMsubsetouter.orderBy(\"MAGshortNormName\").show(100) \n\nprintln(\"Orcid pub cnt:\"+S2_MAG_Orcid_df\n.filter(($\"orcid\" \u003d!\u003d \"\") \u0026\u0026 ($\"orcid\".isNotNull)).count())\n\nval df2 \u003d S2_MAG_Orcid_df.select(countDistinct(\"orcid\"))\ndf2.show(false)\n\n\nval dfMagid \u003d S2_MAG_Orcid_df.select(countDistinct(\"MAGauthorId\"))\ndfMagid.show(false)\n\nval dfS2Id \u003d S2_MAG_Orcid_df.select(countDistinct(\"S2authorId\"))\ndfS2Id.show(false)\n*/\n              \n",
       "user": "anonymous",
-      "dateUpdated": "2020-12-09 16:20:32.620",
+      "dateUpdated": "2020-12-22 12:02:24.408",
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -553,19 +679,19 @@
           "group": "spark",
           "values": [
             {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d5"
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d0"
             },
             {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d6"
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d1"
             },
             {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d7"
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d2"
             },
             {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d8"
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d3"
             },
             {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d10"
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d5"
             }
           ],
           "interpreterSettingId": "spark"
@@ -575,8 +701,8 @@
       "jobName": "paragraph_1606221610014_51356091",
       "id": "paragraph_1606221610014_51356091",
       "dateCreated": "2020-11-24 14:40:10.014",
-      "dateStarted": "2020-12-04 15:15:43.647",
-      "dateFinished": "2020-12-04 19:21:43.846",
+      "dateStarted": "2020-12-22 12:02:24.414",
+      "dateFinished": "2020-12-22 13:29:04.506",
       "status": "FINISHED"
     },
     {
@@ -648,9 +774,9 @@
       "status": "FINISHED"
     },
     {
-      "text": "%spark\n\nval S2_MAG_Orcid_orcid \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_Orcid.parquet\")\n//.cache()\n\n//S2_MAG_Orcid_S2doi.printSchema\nprintln(\"S2_MAG_Orcid_S2doi cnt:\" + S2_MAG_Orcid_orcid.filter($\"orcId\"\u003d!\u003d\"\"  \u0026\u0026 $\"orcId\".isNotNull).count())\n//S2_MAG_Orcid_S2doi.show(40)\n\n//S2_MAG_Orcid_S2doi.select(countDistinct(\"S2doi\")).show(false)\n\n//S2_MAG_Orcid_S2doi cnt:816642169\n//                        49376386\n// \n\n//S2_MAG_Orcid_df1.write.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_Orcid_S2doi.parquet\")      ",
+      "text": "%spark\n\nval S2_MAG_Orciddf \u003d spark.read.parquet(\"/media/ometaxas/nvme/datasets/MAG_S2/S2_MAG_Orcid.parquet\").dropDuplicates()\n\nprintln(\"S2_MAG_Orcid cnt:\" + S2_MAG_Orciddf.count())\n\nval S2_MAG_Orcid_orcid \u003d S2_MAG_Orciddf.filter($\"orcId\"\u003d!\u003d\"\"  \u0026\u0026 $\"orcId\".isNotNull)\n.cache()\n\n//S2_MAG_Orcid_S2doi.printSchema\nprintln(\"S2_MAG_Orcid_orcid cnt:\" + S2_MAG_Orcid_orcid.count())\n//S2_MAG_Orcid_S2doi.show(40)\n\nS2_MAG_Orcid_orcid.select(countDistinct(\"orcId\")).show(false)\nS2_MAG_Orcid_orcid.select(countDistinct(\"MAGpaperId\")).show(false)\n\n\n\n//S2_MAG_Orcid_S2doi cnt:816642169\n//                        49376386\n// \n\n//S2_MAG_Orcid_df1.write.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_Orcid_S2doi.parquet\")      ",
       "user": "anonymous",
-      "dateUpdated": "2020-12-09 16:18:12.161",
+      "dateUpdated": "2020-12-22 16:29:24.032",
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -673,7 +799,7 @@
         "msg": [
           {
             "type": "TEXT",
-            "data": "S2_MAG_Orcid_S2doi cnt:49376386\n\u001b[1m\u001b[34mS2_MAG_Orcid_orcid\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m \u003d [MAGpaperId: bigint, MAGdoi: string ... 20 more fields]\n"
+            "data": "S2_MAG_Orcid cnt:661650778\nS2_MAG_Orcid_orcid cnt:31657984\n+---------------------+\n|count(DISTINCT orcId)|\n+---------------------+\n|1943462              |\n+---------------------+\n\n+--------------------------+\n|count(DISTINCT MAGpaperId)|\n+--------------------------+\n|18095040                  |\n+--------------------------+\n\n\u001b[1m\u001b[34mS2_MAG_Orciddf\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [MAGpaperId: bigint, MAGdoi: string ... 20 more fields]\n\u001b[1m\u001b[34mS2_MAG_Orcid_orcid\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [MAGpaperId: bigint, MAGdoi: string ... 20 more fields]\n"
           }
         ]
       },
@@ -686,10 +812,19 @@
           "group": "spark",
           "values": [
             {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d2"
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d8"
             },
             {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d3"
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d9"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d10"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d11"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d12"
             }
           ],
           "interpreterSettingId": "spark"
@@ -699,15 +834,15 @@
       "jobName": "paragraph_1607153353572_852553936",
       "id": "paragraph_1607153353572_852553936",
       "dateCreated": "2020-12-05 09:29:13.572",
-      "dateStarted": "2020-12-09 16:15:56.415",
-      "dateFinished": "2020-12-09 16:17:11.034",
+      "dateStarted": "2020-12-22 16:29:24.037",
+      "dateFinished": "2020-12-22 18:59:05.924",
       "status": "FINISHED"
     },
     {
       "title": "Test normalization functions",
-      "text": "%spark\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\n\nval a \u003d 100\nprintln(a)\n\n\ndef fulltrim(e:String): String \u003d {\n    \n return org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    .replaceAll(\"[ \u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+‐–*\\\\\\\\-]+\", \"\")\n    .replaceAll(\"Æ\", \"AE\")\n    .replaceAll(\"Ð\", \"D\")\n    .replaceAll(\"Ø\", \"O\")\n    .replaceAll(\"Þ\", \"TH\")\n    .replaceAll(\"ß\", \"ss\")\n    .replaceAll(\"ð\", \"d\")\n    .replaceAll(\"æ\", \"ae\")\n    .replaceAll(\"ø\", \"o\")\n    .replaceAll(\"þ\", \"th\")\n    .replaceAll(\"Œ\", \"OE\")\n    .replaceAll(\"œ\", \"oe\")\n    .replaceAll(\"ƒ\", \"f\")\n\t\t\t\t.trim()\n    \n}\n/*\nÆ → AE\nÐ → D\nØ → O\nÞ → TH\nß → ss\næ → ae\nð → d\nø → o\nþ → th\nŒ → OE\nœ → oe\nƒ → f\"\n*/\ndef unaccent2(e: String): String \u003d {\n  val normname \u003d org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    //.replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n    .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+‐–*\\\\\\\\-]+\", \"\")\n    .replaceAll(\"Æ\", \"AE\")\n    .replaceAll(\"Ð\", \"D\")\n    .replaceAll(\"Ø\", \"O\")\n    .replaceAll(\"Þ\", \"TH\")\n    .replaceAll(\"ß\", \"ss\")\n    .replaceAll(\"ð\", \"d\")\n    .replaceAll(\"æ\", \"ae\")\n    .replaceAll(\"ø\", \"o\")\n    .replaceAll(\"þ\", \"th\")\n    .replaceAll(\"Œ\", \"OE\")\n    .replaceAll(\"œ\", \"oe\")\n    .replaceAll(\"ƒ\", \"f\")\n\t\t\t\t.trim().split(\" \")\n    \n\n val shortName \u003d  if (normname.length \u003d\u003d 1) normname(0) else normname(0).take(1) + normname(normname.length-1)\n return  shortName\n  \n}\n\ndef unaccent3(e: String): String \u003d {\n  val normname \u003d \n  //e\n  org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n     //.replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n    .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+–*\\\\\\\\-]+\", \"\")\n    .trim()\n    .split(\" \")\n\n  val shortName \u003d\n    if (normname.length \u003d\u003d 1) normname(0)\n    else normname(0).take(1) + normname(normname.length - 1)\n  return shortName\n}\n\n//println(\"chinese:\"+ unaccent2(\"福村 健\"))\n\nprintln(unaccent2(\"Søsren Løsvtrup\"))\nprintln(fulltrim(\"Søsren Løsvtrup\"))\n\nprintln(unaccent2(\"Tĥïŝ ĩš â fůňķŷ Šťŕĭńġ\"))\nprintln(fulltrim(\"Tĥïŝ ĩš â fůňķŷ Šťŕĭńġ\"))\n\n\n\nprintln(unaccent2(\"Pura López‐Colomé\"))\nprintln(fulltrim(\"Pura López‐Colomé\"))\n\n\n",
+      "text": "%spark\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport java.util.Locale;\nimport com.github.mrpowers.spark.stringmetric.SimilarityFunctions._\nimport com.github.mrpowers.spark.stringmetric.PhoneticAlgorithms._\n\n\nval a \u003d 100\nprintln(a)\n\n\n\ndef normName1(e:String): String \u003d {\n    \n return org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n     .replaceAll(\"[ \u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+‐–*\\\\\\\\-]+\", \"\")\n    .replaceAll(\"Æ\", \"AE\")\n    .replaceAll(\"Ð\", \"D\")\n    .replaceAll(\"Ø\", \"O\")\n    .replaceAll(\"Þ\", \"TH\")\n    .replaceAll(\"ß\", \"ss\")\n    .replaceAll(\"ð\", \"d\")\n    .replaceAll(\"æ\", \"ae\")\n    .replaceAll(\"ø\", \"o\")\n    .replaceAll(\"þ\", \"th\")\n    .replaceAll(\"Œ\", \"OE\")\n    .replaceAll(\"œ\", \"oe\")\n    .replaceAll(\"ƒ\", \"f\")\n\t.trim()\n    \n}\ndef shortNormName1(e: String): String \u003d {\n  val normname \u003d org.apache.commons.lang3.StringUtils.stripAccents(e.toLowerCase(Locale.ENGLISH))\n    //.replaceAll(\"[^\\\\p{ASCII}]\", \"\")\n     .replaceAll(\"[\u003c\u003e:´,’./\\\\\u0027\\\\\\\";(){}!@#$%^\u0026+‐–*\\\\\\\\-]+\", \"\")\n    .replaceAll(\"Æ\", \"AE\")\n    .replaceAll(\"Ð\", \"D\")\n    .replaceAll(\"Ø\", \"O\")\n    .replaceAll(\"Þ\", \"TH\")\n    .replaceAll(\"ß\", \"ss\")\n    .replaceAll(\"ð\", \"d\")\n    .replaceAll(\"æ\", \"ae\")\n    .replaceAll(\"ø\", \"o\")\n    .replaceAll(\"þ\", \"th\")\n    .replaceAll(\"Œ\", \"OE\")\n    .replaceAll(\"œ\", \"oe\")\n    .replaceAll(\"ƒ\", \"f\")\n\t.trim().split(\" \")\n    \n\n val shortName \u003d  if (normname.length \u003d\u003d 1) normname(0) else normname(0).take(1) + normname(normname.length-1)\n \n return  shortName\n  \n}\n\n//\"合阪  幸三\",\"平池  春子\",\"兵藤  博恵\",\"生月  弓子\",\"秋山  純子\",\"木村  好秀\",\"岡田  紀三男\",\"小畑  清一郎\",\"宮本  雄一郎\",\"平池  修\",\"兵藤  博信\",\"森  宏之\"],\"S2shortNormNames\":[\"合阪幸三\",\"平池春子\",\"兵藤博恵\",\"生月弓子\",\"秋山純子\",\"木村好秀\",\"岡田紀三男\",\"小畑清一郎\",\"宮本雄一郎\",\"平池修\",\"兵藤博信\",\"森宏之\"],\"S2normNames\":[\"合阪幸三\",\"平池春子\",\"兵藤博恵\",\"生月弓子\",\"秋山純子\",\"木村好秀\",\"岡田紀三男\",\"小畑清一郎\",\"宮本雄一郎\",\"平池修\",\"兵藤博信\",\"森宏之\"\n//println(\"chinese:\"+ unaccent2(\"福村 健\"))\n\nprintln(normName1(\"合阪  幸三\"))\nprintln(shortNormName1(\"合阪  幸三\"))\n\nprintln(normName1(\"兵藤  博恵\"))\nprintln(shortNormName1(\"兵藤  博恵\"))\n\nprintln(normName1(\"С.В.  Гувернюк\"))\nprintln(shortNormName1(\"С.В.  Гувернюк\"))\n\nprintln(normName1(\"C. E. Pankhurst\"))\nprintln(shortNormName1(\"C. E. Pankhurst\"))\n\n\nif (shortNormName1(\"合阪  幸三\")\u003d\u003dshortNormName1(\"兵藤  博恵\")) println(\"short names match\")\n\nif (shortNormName1(\"合阪  幸三\")\u003d\u003dshortNormName1(\"平池  春子\")) println(\"short names match\")\n\n//if (double_metaphone(normName(\"合阪  幸三\"))\u003d\u003ddouble_metaphone(normName(\"兵藤  博恵\")) ) println(\"names match\")\n\nval df1 \u003d spark.createDataFrame(Seq((1, \"andy\", 20, \"USA\"), (2, \"jeff\", 23, \"China\"), (3, \"james\", 18, \"USA\"))).toDF(\"id\", \"name\", \"age\", \"country\")\n\nval sourceDF \u003d spark.createDataFrame(\n      Seq(\n          \n          (\"WeiQi Li\", \"Wei Li\"),\n          (\"D. Nenad\", \"T. Nenad\"),\n          (\"Van Vase\", \"Van Vaese\"),\n          (\"Van Vosse\", \"Van Voese\"),\n          (\"Van Vosse\", \"Ban Voshe\"),\n          (\"С.В.  Гувернюк\", \"Я.А.  Дынников\"),\n          (\"Marco  Apitz\",\"Marc  Opitz\"),\n          (\"Л.  Туйчиев\",\"Ш.  Туйчиев\"),\n          (\"mjillera\", \"millera\"),\n          (\"Ю.  Юров\",\"Ю. Б. Юров\"),\n          (\"В А Таряник\",\"В О Таряник\"),\n          (\"C. E. Pankhurst\",\"C.  Pankhurst\"),\n          (\"B  Geavlete\",\"P  Geavlete\"),\n          (\"Vladimiras  Bondarenko\",\"Vladimiras  Bondarenka\"),\n          (\"Quentin  Bonnardβ\",\"Quentin  Bonnard\"),\n          (\"А. С. Шуваев\",\"Н. С. Шуваев\"),\n          (\"Tong Bou Chang\",\"Tong-Bou  Chang\"),\n          (\"Zhong  Feng\",\"Zhong  Fei\"),\n          (\"Д. А. Минченко\",\"Т. А. Зинченко\"),\n          (\"合阪  幸三\", \"平池  春子\")\n        \n        )).toDF(\"word1\", \"word2\")\n        \n      /*\n        List(\n          (\"合阪  幸三\", \"兵藤  博恵\"),\n          (\"合阪  幸三\", \"平池  春子\")\n          \n        ), List(\n          (\"word1\", StringType, true),\n          (\"word2\", StringType, true)\n        )\n      )*/\n\nval levDF \u003d sourceDF.withColumn(\n        \"w1_w2_lev\",\n        levenshtein(col(\"word1\"), col(\"word2\"))\n      ).show()\n      \n      val actualDF \u003d sourceDF.withColumn(\n        \"w1_w2_jaro_winkler\",\n        jaro_winkler(col(\"word1\"), col(\"word2\"))\n      ).show()\n\n\n   val actualDF2 \u003d sourceDF.withColumn(\n        \"w1_w2_jaccard\",\n        jaccard_similarity(col(\"word1\"), col(\"word2\"))\n      ).show()\n      \n        val actualDF3 \u003d sourceDF.withColumn(\n        \"word1_double_metaphone\",\n        double_metaphone(col(\"word1\"))\n      )\n      .withColumn(\n        \"word2_double_metaphone\",\n        double_metaphone(col(\"word2\"))\n        )\n        .show()\n        \n        val actualDF4 \u003d sourceDF.withColumn(\n        \"word1_soundex\",\n        soundex(col(\"word1\"))\n      )\n      .withColumn(\n        \"word2_soundex\",\n        soundex(col(\"word2\"))\n        )\n        .show()\n      \n      \n      val compdf \u003d sourceDF.filter( shortNormName($\"word1\")\u003d\u003d\u003dshortNormName($\"word2\")).show()\n      \n      val compdf2 \u003d sourceDF.filter( levenshtein( normName($\"word1\"), normName($\"word2\"))\u003e0.8   ).show() \n      \n      val compdf3 \u003d sourceDF.filter(length(double_metaphone(normName($\"word1\")))\u003e1 \u0026\u0026  double_metaphone(normName($\"word1\")) \u003d\u003d\u003d double_metaphone(normName($\"word2\"))) .show() \n      \n      \n      val compdf4 \u003d sourceDF.filter(shortNormName($\"word1\")\u003d\u003d\u003dshortNormName($\"word2\") || ( jaro_winkler(normName($\"word1\"),normName($\"word2\"))\u003e0.8  \u0026\u0026  levenshtein(normName($\"word1\"), normName($\"word2\"))\u003c2  \u0026\u0026 double_metaphone(normName($\"word1\")) \u003d\u003d\u003d double_metaphone(normName($\"word2\")) )).show() \n//( levenshtein($\"normName\", $\"S2normName\")\u003e0.8  \u0026\u0026 double_metaphone($\"normName\") \u003d\u003d\u003d double_metaphone($\"S2normName\") )\n\n\n\n\n\n",
       "user": "anonymous",
-      "dateUpdated": "2020-12-01 11:27:02.276",
+      "dateUpdated": "2020-12-22 12:02:11.916",
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -731,7 +866,7 @@
         "msg": [
           {
             "type": "TEXT",
-            "data": "100\nslosvtrup\nsosrenlosvtrup\ntstring\nthisisafunkystring\nplopezcolome\npuralopezcolome\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\n\u001b[1m\u001b[34ma\u001b[0m: \u001b[1m\u001b[32mInt\u001b[0m \u003d 100\n\u001b[1m\u001b[34mfulltrim\u001b[0m: \u001b[1m\u001b[32m(e: String)String\u001b[0m\n\u001b[1m\u001b[34munaccent2\u001b[0m: \u001b[1m\u001b[32m(e: String)String\u001b[0m\n\u001b[1m\u001b[34munaccent3\u001b[0m: \u001b[1m\u001b[32m(e: String)String\u001b[0m\n"
+            "data": "100\n合阪幸三\n合幸三\n兵藤博恵\n兵博恵\nсвгувернюк\nсгувернюк\ncepankhurst\ncpankhurst\n+--------------------+--------------------+---------+\n|               word1|               word2|w1_w2_lev|\n+--------------------+--------------------+---------+\n|            WeiQi Li|              Wei Li|        2|\n|            D. Nenad|            T. Nenad|        1|\n|            Van Vase|           Van Vaese|        1|\n|           Van Vosse|           Van Voese|        1|\n|           Van Vosse|           Ban Voshe|        2|\n|      С.В.  Гувернюк|      Я.А.  Дынников|       10|\n|        Marco  Apitz|         Marc  Opitz|        2|\n|         Л.  Туйчиев|         Ш.  Туйчиев|        1|\n|            mjillera|             millera|        1|\n|            Ю.  Юров|          Ю. Б. Юров|        2|\n|         В А Таряник|         В О Таряник|        1|\n|     C. E. Pankhurst|       C.  Pankhurst|        2|\n|         B  Geavlete|         P  Geavlete|        1|\n|Vladimiras  Bonda...|Vladimiras  Bonda...|        1|\n|   Quentin  Bonnardβ|    Quentin  Bonnard|        1|\n|        А. С. Шуваев|        Н. С. Шуваев|        1|\n|      Tong Bou Chang|     Tong-Bou  Chang|        2|\n|         Zhong  Feng|          Zhong  Fei|        2|\n|      Д. А. Минченко|      Т. А. Зинченко|        2|\n|          合阪  幸三|          平池  春子|        4|\n+--------------------+--------------------+---------+\n\n+--------------------+--------------------+------------------+\n|               word1|               word2|w1_w2_jaro_winkler|\n+--------------------+--------------------+------------------+\n|            WeiQi Li|              Wei Li|0.8833333333333334|\n|            D. Nenad|            T. Nenad|0.9166666666666666|\n|            Van Vase|           Van Vaese|0.9527777777777777|\n|           Van Vosse|           Van Voese|0.9305555555555555|\n|           Van Vosse|           Ban Voshe|0.8518518518518517|\n|      С.В.  Гувернюк|      Я.А.  Дынников|0.5952380952380952|\n|        Marco  Apitz|         Marc  Opitz|0.9484848484848484|\n|         Л.  Туйчиев|         Ш.  Туйчиев|0.9393939393939394|\n|            mjillera|             millera|            0.9625|\n|            Ю.  Юров|          Ю. Б. Юров|0.9533333333333333|\n|         В А Таряник|         В О Таряник|0.9515151515151515|\n|     C. E. Pankhurst|       C.  Pankhurst|0.9688888888888889|\n|         B  Geavlete|         P  Geavlete|0.9393939393939394|\n|Vladimiras  Bonda...|Vladimiras  Bonda...|0.9818181818181818|\n|   Quentin  Bonnardβ|    Quentin  Bonnard|0.9882352941176471|\n|        А. С. Шуваев|        Н. С. Шуваев|0.9444444444444443|\n|      Tong Bou Chang|     Tong-Bou  Chang| 0.958095238095238|\n|         Zhong  Feng|          Zhong  Fei|0.9436363636363637|\n|      Д. А. Минченко|      Т. А. Зинченко|0.9047619047619048|\n|          合阪  幸三|          平池  春子|0.5555555555555555|\n+--------------------+--------------------+------------------+\n\n+--------------------+--------------------+-------------+\n|               word1|               word2|w1_w2_jaccard|\n+--------------------+--------------------+-------------+\n|            WeiQi Li|              Wei Li|         0.83|\n|            D. Nenad|            T. Nenad|         0.78|\n|            Van Vase|           Van Vaese|          1.0|\n|           Van Vosse|           Van Voese|          1.0|\n|           Van Vosse|           Ban Voshe|         0.78|\n|      С.В.  Гувернюк|      Я.А.  Дынников|         0.28|\n|        Marco  Apitz|         Marc  Opitz|         0.75|\n|         Л.  Туйчиев|         Ш.  Туйчиев|         0.82|\n|            mjillera|             millera|         0.86|\n|            Ю.  Юров|          Ю. Б. Юров|         0.86|\n|         В А Таряник|         В О Таряник|         0.82|\n|     C. E. Pankhurst|       C.  Pankhurst|         0.92|\n|         B  Geavlete|         P  Geavlete|         0.78|\n|Vladimiras  Bonda...|Vladimiras  Bonda...|          1.0|\n|   Quentin  Bonnardβ|    Quentin  Bonnard|         0.92|\n|        А. С. Шуваев|        Н. С. Шуваев|          0.8|\n|      Tong Bou Chang|     Tong-Bou  Chang|         0.91|\n|         Zhong  Feng|          Zhong  Fei|         0.89|\n|      Д. А. Минченко|      Т. А. Зинченко|         0.69|\n|          合阪  幸三|          平池  春子|         0.11|\n+--------------------+--------------------+-------------+\n\n+--------------------+--------------------+----------------------+----------------------+\n|               word1|               word2|word1_double_metaphone|word2_double_metaphone|\n+--------------------+--------------------+----------------------+----------------------+\n|            WeiQi Li|              Wei Li|                   AKL|                    AL|\n|            D. Nenad|            T. Nenad|                  TNNT|                  TNNT|\n|            Van Vase|           Van Vaese|                  FNFS|                  FNFS|\n|           Van Vosse|           Van Voese|                  FNFS|                  FNFS|\n|           Van Vosse|           Ban Voshe|                  FNFS|                  PNFX|\n|      С.В.  Гувернюк|      Я.А.  Дынников|                      |                      |\n|        Marco  Apitz|         Marc  Opitz|                  MRKP|                  MRKP|\n|         Л.  Туйчиев|         Ш.  Туйчиев|                      |                      |\n|            mjillera|             millera|                  MJLR|                   MLR|\n|            Ю.  Юров|          Ю. Б. Юров|                      |                      |\n|         В А Таряник|         В О Таряник|                      |                      |\n|     C. E. Pankhurst|       C.  Pankhurst|                  KPNK|                  KPNK|\n|         B  Geavlete|         P  Geavlete|                  PJFL|                  PJFL|\n|Vladimiras  Bonda...|Vladimiras  Bonda...|                  FLTM|                  FLTM|\n|   Quentin  Bonnardβ|    Quentin  Bonnard|                  KNTN|                  KNTN|\n|        А. С. Шуваев|        Н. С. Шуваев|                      |                      |\n|      Tong Bou Chang|     Tong-Bou  Chang|                  TNKP|                  TNKP|\n|         Zhong  Feng|          Zhong  Fei|                  JNKF|                  JNKF|\n|      Д. А. Минченко|      Т. А. Зинченко|                      |                      |\n|          合阪  幸三|          平池  春子|                      |                      |\n+--------------------+--------------------+----------------------+----------------------+\n\n+--------------------+--------------------+--------------+--------------+\n|               word1|               word2| word1_soundex| word2_soundex|\n+--------------------+--------------------+--------------+--------------+\n|            WeiQi Li|              Wei Li|          W240|          W400|\n|            D. Nenad|            T. Nenad|          D553|          T553|\n|            Van Vase|           Van Vaese|          V512|          V512|\n|           Van Vosse|           Van Voese|          V512|          V512|\n|           Van Vosse|           Ban Voshe|          V512|          B512|\n|      С.В.  Гувернюк|      Я.А.  Дынников|С.В.  Гувернюк|Я.А.  Дынников|\n|        Marco  Apitz|         Marc  Opitz|          M621|          M621|\n|         Л.  Туйчиев|         Ш.  Туйчиев|   Л.  Туйчиев|   Ш.  Туйчиев|\n|            mjillera|             millera|          M246|          M460|\n|            Ю.  Юров|          Ю. Б. Юров|      Ю.  Юров|    Ю. Б. Юров|\n|         В А Таряник|         В О Таряник|   В А Таряник|   В О Таряник|\n|     C. E. Pankhurst|       C.  Pankhurst|          C152|          C152|\n|         B  Geavlete|         P  Geavlete|          B214|          P214|\n|Vladimiras  Bonda...|Vladimiras  Bonda...|          V435|          V435|\n|   Quentin  Bonnardβ|    Quentin  Bonnard|          Q535|          Q535|\n|        А. С. Шуваев|        Н. С. Шуваев|  А. С. Шуваев|  Н. С. Шуваев|\n|      Tong Bou Chang|     Tong-Bou  Chang|          T521|          T521|\n|         Zhong  Feng|          Zhong  Fei|          Z521|          Z521|\n|      Д. А. Минченко|      Т. А. Зинченко|Д. А. Минченко|Т. А. Зинченко|\n|          合阪  幸三|          平池  春子|    合阪  幸三|    平池  春子|\n+--------------------+--------------------+--------------+--------------+\n\n+---------------+---------------+\n|          word1|          word2|\n+---------------+---------------+\n|       WeiQi Li|         Wei Li|\n|       Ю.  Юров|     Ю. Б. Юров|\n|    В А Таряник|    В О Таряник|\n|C. E. Pankhurst|  C.  Pankhurst|\n| Tong Bou Chang|Tong-Bou  Chang|\n+---------------+---------------+\n\n+--------------------+--------------------+\n|               word1|               word2|\n+--------------------+--------------------+\n|            WeiQi Li|              Wei Li|\n|            D. Nenad|            T. Nenad|\n|            Van Vase|           Van Vaese|\n|           Van Vosse|           Van Voese|\n|           Van Vosse|           Ban Voshe|\n|      С.В.  Гувернюк|      Я.А.  Дынников|\n|        Marco  Apitz|         Marc  Opitz|\n|         Л.  Туйчиев|         Ш.  Туйчиев|\n|            mjillera|             millera|\n|            Ю.  Юров|          Ю. Б. Юров|\n|         В А Таряник|         В О Таряник|\n|     C. E. Pankhurst|       C.  Pankhurst|\n|         B  Geavlete|         P  Geavlete|\n|Vladimiras  Bonda...|Vladimiras  Bonda...|\n|   Quentin  Bonnardβ|    Quentin  Bonnard|\n|        А. С. Шуваев|        Н. С. Шуваев|\n|         Zhong  Feng|          Zhong  Fei|\n|      Д. А. Минченко|      Т. А. Зинченко|\n|          合阪  幸三|          平池  春子|\n+--------------------+--------------------+\n\n+--------------------+--------------------+\n|               word1|               word2|\n+--------------------+--------------------+\n|            D. Nenad|            T. Nenad|\n|            Van Vase|           Van Vaese|\n|           Van Vosse|           Van Voese|\n|        Marco  Apitz|         Marc  Opitz|\n|         B  Geavlete|         P  Geavlete|\n|Vladimiras  Bonda...|Vladimiras  Bonda...|\n|   Quentin  Bonnardβ|    Quentin  Bonnard|\n|      Tong Bou Chang|     Tong-Bou  Chang|\n|         Zhong  Feng|          Zhong  Fei|\n+--------------------+--------------------+\n\n+--------------------+--------------------+\n|               word1|               word2|\n+--------------------+--------------------+\n|            WeiQi Li|              Wei Li|\n|            D. Nenad|            T. Nenad|\n|            Van Vase|           Van Vaese|\n|           Van Vosse|           Van Voese|\n|        Marco  Apitz|         Marc  Opitz|\n|         Л.  Туйчиев|         Ш.  Туйчиев|\n|            Ю.  Юров|          Ю. Б. Юров|\n|         В А Таряник|         В О Таряник|\n|     C. E. Pankhurst|       C.  Pankhurst|\n|         B  Geavlete|         P  Geavlete|\n|Vladimiras  Bonda...|Vladimiras  Bonda...|\n|   Quentin  Bonnardβ|    Quentin  Bonnard|\n|        А. С. Шуваев|        Н. С. Шуваев|\n|      Tong Bou Chang|     Tong-Bou  Chang|\n+--------------------+--------------------+\n\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport java.util.Locale\nimport com.github.mrpowers.spark.stringmetric.SimilarityFunctions._\nimport com.github.mrpowers.spark.stringmetric.PhoneticAlgorithms._\n\u001b[1m\u001b[34ma\u001b[0m: \u001b[1m\u001b[32mInt\u001b[0m \u003d 100\n\u001b[1m\u001b[34mnormName1\u001b[0m: \u001b[1m\u001b[32m(e: String)String\u001b[0m\n\u001b[1m\u001b[34mshortNormName1\u001b[0m: \u001b[1m\u001b[32m(e: String)String\u001b[0m\n\u001b[1m\u001b[34mdf1\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m \u003d [id: int, name: string ... 2 more fields]\n\u001b[1m\u001b[34msourceDF\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m \u003d [word1: string, word2: string]\n\u001b[1m\u001b[34mlevDF\u001b[0m: \u001b[1m\u001b[32mUnit\u001b[0m \u003d ()\n\u001b[1m\u001b[34mactualDF\u001b[0m: \u001b[1m\u001b[32mUnit\u001b[0m \u003d ()\n\u001b[1m\u001b[34mactualDF2\u001b[0m: \u001b[1m\u001b[32mUnit\u001b[0m \u003d ()\n\u001b[1m\u001b[34mactualDF3\u001b[0m: \u001b[1m\u001b[32mUnit\u001b[0m \u003d ()\n\u001b[1m\u001b[34mactualDF4...\n"
           }
         ]
       },
@@ -741,14 +876,90 @@
       "jobName": "paragraph_1606472529243_799120251",
       "id": "paragraph_1606472529243_799120251",
       "dateCreated": "2020-11-27 12:22:09.243",
-      "dateStarted": "2020-11-27 16:53:18.350",
-      "dateFinished": "2020-11-27 16:53:18.525",
+      "dateStarted": "2020-12-22 12:02:11.923",
+      "dateFinished": "2020-12-22 12:02:13.600",
       "status": "FINISHED"
     },
     {
-      "text": "%spark\nimport com.github.mrpowers.spark.stringmetric.SimilarityFunctions._\nimport com.github.mrpowers.spark.stringmetric.PhoneticAlgorithms._\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\nimport java.util.Calendar;\n\nprintln(Calendar.getInstance().getTime())\n\nval orcid_df \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/orcid.parquet\")\nprintln(\"ORCiD cnt:\" + orcid_df.count())\nprintln(Calendar.getInstance().getTime())\n\nval S2_MAG_df \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_df.parquet\")\nprintln(\"s2doi diffs cnt:\"+S2_MAG_df.count())\nprintln(Calendar.getInstance().getTime())\n\n/*\nprintln(Calendar.getInstance().getTime())\nS2_MAG_df.groupBy($\"MAGdoi\")\n.agg( collect_list($\"MAGshortNormName\") as \"magauthors\", collect_list($\"S2shortNormName\") as \"s2authors\").show(10)\n\nprintln(Calendar.getInstance().getTime())\n\nval S2_MAG_df_diffs \u003d S2_MAG_df.filter($\"S2doi\"\u003d!\u003d\"\"  \u0026\u0026 $\"S2doi\".isNotNull \u0026\u0026 $\"S2doi\"\u003d!\u003d$\"MAGdoi\")\n//.cache()\n\nprintln(\"s2doi diffs cnt:\"+S2_MAG_df_diffs.count())\nprintln(Calendar.getInstance().getTime())\n\n//val dfdoidiffs \u003d S2_MAG_df.select(countDistinct(\"S2doi\"))\n//dfdoidiffs.show(false)\n*/\n\nval S2_MAG_Orcid_df1 \u003d S2_MAG_df\n       //.join(broadcast(orcid_df), S2_MAG_df(\"MAGdoi\") \u003d\u003d\u003d orcid_df(\"doi\") \u0026\u0026 ( S2_MAG_df(\"S2shortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\") ||  S2_MAG_df(\"MAGshortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\")   \n                   .join(orcid_df, S2_MAG_df(\"MAGdoi\") \u003d\u003d\u003d orcid_df(\"doi\") \u0026\u0026 ( S2_MAG_df(\"S2shortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\") ||  S2_MAG_df(\"MAGshortNormName\")\u003d\u003d\u003dorcid_df(\"ORCshortNormName\")   \n                  // || (levenshtein(fulltrim($\"MAGname\"), fulltrim($\"orcfullname\"))\u003e80  \u0026\u0026 soundex(fulltrim($\"MAGname\")) \u003d\u003d\u003d soundex(fulltrim($\"orcfullname\")) ) \n                   ), \"outer\")                  \n                   .select(S2_MAG_df(\"MAGtitle\"), S2_MAG_df(\"MAGpaperId\"), S2_MAG_df(\"MAGdoi\"),  S2_MAG_df(\"MAGshortNormName\"), S2_MAG_df(\"MAGname\"), S2_MAG_df(\"MAGnormName\"), S2_MAG_df(\"MAGauthorId\")\n                     , double_metaphone(S2_MAG_df(\"MAGnormName\")).as(\"soundexFull\"), double_metaphone(S2_MAG_df(\"MAGshortNormName\")).as(\"soundexShort\")\n                     //,S2_MAG_df(\"S2fos)\n                    , S2_MAG_df(\"affiliationId\"), S2_MAG_df(\"S2authorId\"),S2_MAG_df(\"S2paperId\"), S2_MAG_df(\"S2doi\"), S2_MAG_df(\"S2name\"), S2_MAG_df(\"S2shortNormName\"), orcid_df(\"orcId\"))\n                  // .persist(StorageLevel.DISK_ONLY)\n\nprintln(\"Join with ORciD cnt:\"+S2_MAG_Orcid_df1.count())\nprintln(Calendar.getInstance().getTime())\n\nS2_MAG_Orcid_df1.write.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_Orcid.parquet\")      \nprintln(Calendar.getInstance().getTime())\n",
+      "title": "Explode Affiliations \u0026 add seqNum ",
+      "text": "%spark\n\n// Specify schema for your csv file\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\n\nval MAG_HOME \u003d \"/media/datadisk/Datasets/MAG/20201109/mag\"\nval paperAuthorsAffTsvFilename \u003d \"PaperAuthorAffiliations.txt\"\n\n\nval paperAuthorAffSchema \u003d new StructType().\n                add(\"paperId\", LongType, false).\n                add(\"authorId\", LongType, false).                \n                add(\"affiliationId\", LongType, true).\n                add(\"authorSequenceNumber\",IntegerType, true).\n                add(\"originalAuthor\", StringType, true).\n                add(\"originalAffiliation\", StringType, true)\n\n                \nval paperAuthorAffdf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(paperAuthorAffSchema).\n                csv(s\"file://$MAG_HOME/$paperAuthorsAffTsvFilename\")\n                .persist(StorageLevel.DISK_ONLY)\n\n\nprintln(\"paperAuthorAffdf cnt:\" + paperAuthorAffdf.count())\nval paperIdsdf \u003d paperAuthorAffdf.select(countDistinct(\"paperId\"))\npaperIdsdf.show(false)\nval authorIdsdf \u003d paperAuthorAffdf.select(countDistinct(\"authorId\")) \nauthorIdsdf.show(false)\n\n\n\nval S2_MAG_df \u003d spark.read.parquet(\"/media/ometaxas/nvme/datasets/MAG_S2/S2_MAG_Orcid.parquet\")\n\nprintln(\"paperAuthorAffdf cnt:\" + S2_MAG_df.count())\nval paperIdsdf2 \u003d S2_MAG_df.select(countDistinct(\"MAGpaperId\")) \npaperIdsdf2.show(false)\nval authorIdsdf2 \u003d S2_MAG_df.select(countDistinct(\"MAGauthorId\")) \nauthorIdsdf2.show(false)\n\n/*\n        .select(S2_MAG_df(\"MAGpaperId\"), S2_MAG_df(\"MAGdoi\"),  S2_MAG_df(\"MAGdisplayName\"), S2_MAG_df(\"MAGname\"), S2_MAG_df(\"MAGnormName\"), \n                            S2_MAG_df(\"MAGshortNormName\"),  S2_MAG_df(\"MAGauthorId\"), S2_MAG_df(\"fosids\"), S2_MAG_df(\"fosids_lvl0\") ,S2_MAG_df(\"fosids_lvl1\"), \n                            S2_MAG_df(\"authorIds\"), S2_MAG_df(\"authorNormNames\"), S2_MAG_df(\"authorShortNormNames\"),S2_MAG_df(\"affiliationIds\"), \n                            S2_MAG_df(\"S2authorId\"),S2_MAG_df(\"S2paperId\"), S2_MAG_df(\"S2doi\"), S2_MAG_df(\"S2name\"), S2_MAG_df(\"S2shortNormName\"), S2_MAG_df(\"S2normName\"), S2_MAG_df(\"S2fos\") , orcid_df(\"orcId\"))\n                            \n*/\n\nval PKGinitdf \u003d paperAuthorAffdf\n                   .join(S2_MAG_df, paperAuthorAffdf(\"paperId\") \u003d\u003d\u003d S2_MAG_df(\"MAGpaperId\")  \u0026\u0026  paperAuthorAffdf(\"authorId\")\u003d\u003d\u003dS2_MAG_df(\"MAGauthorId\") , \"inner\")                  \n                   .select(S2_MAG_df(\"MAGpaperId\"),   S2_MAG_df(\"MAGauthorId\"), paperAuthorAffdf(\"affiliationId\"), paperAuthorAffdf(\"authorSequenceNumber\"), \n                          S2_MAG_df(\"S2authorId\"),S2_MAG_df(\"S2paperId\"),S2_MAG_df(\"orcId\"))\n                          \nPKGinitdf.write.parquet(\"/media/datadisk/Datasets/MAG_S2/PKGinitdf.parquet\")                    ",
       "user": "anonymous",
-      "dateUpdated": "2020-11-25 23:58:59.745",
+      "dateUpdated": "2020-12-23 09:32:12.856",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "paperAuthorAffdf cnt:667787869\n+-----------------------+\n|count(DISTINCT paperId)|\n+-----------------------+\n|245973483              |\n+-----------------------+\n\n+------------------------+\n|count(DISTINCT authorId)|\n+------------------------+\n|260831808               |\n+------------------------+\n\npaperAuthorAffdf cnt:661651048\n+--------------------------+\n|count(DISTINCT MAGpaperId)|\n+--------------------------+\n|245973406                 |\n+--------------------------+\n\n+---------------------------+\n|count(DISTINCT MAGauthorId)|\n+---------------------------+\n|260831009                  |\n+---------------------------+\n\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger\nimport org.slf4j.LoggerFactory\nimport org.apache.spark.sql.functions.concat_ws\nimport org.apache.spark.sql.functions.countDistinct\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer\nimport java.util.Locale\nimport org.apache.spark.storage.StorageLevel\n\u001b[1m\u001b[34mMAG_HOME\u001b[0m: \u001b[1m\u001b[32mString\u001b[0m \u003d /media/datadisk/Datasets/MAG/20201109/mag\n\u001b[1m\u001b[34mpaperAuthorsAffTsvFilename\u001b[0m: \u001b[1m\u001b[32mString\u001b[0m \u003d PaperAuthorAffiliations.txt\n\u001b[1m\u001b[34mpaperAuthorAffSchema\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.types.StructType\u001b[0m \u003d StructType(StructField(paperId,LongType,false), StructField(authorId,LongType,false), StructField(affiliationId,LongType,t...\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d0"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d1"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d2"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d3"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d4"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d5"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d6"
+            },
+            {
+              "jobUrl": "http://PC192.168.2.7.station:4040/jobs/job?id\u003d7"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1606036250517_213251448",
+      "id": "paragraph_1606036250517_213251448",
+      "dateCreated": "2020-11-22 11:10:50.517",
+      "dateStarted": "2020-12-23 09:32:12.860",
+      "dateFinished": "2020-12-23 09:56:40.786",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%spark\nimport org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.apache.spark.sql.functions.concat_ws;\nimport org.apache.spark.sql.functions.countDistinct;\n//import  org.apache.spark.sql.functions._\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer;\nimport java.util.Locale;\nimport org.apache.spark.storage.StorageLevel;\n\nval PKG_init_df \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/PKGinitdf.parquet\")\n\nPKG_init_df.limit(1000000).coalesce(1).write.parquet(\"/media/datadisk/Datasets/MAG_S2/PKGinitdf_1M.parquet\")                    ",
+      "user": "anonymous",
+      "dateUpdated": "2021-01-04 15:02:00.992",
       "config": {
         "colWidth": 12.0,
         "fontSize": 9.0,
@@ -767,78 +978,11 @@
         "forms": {}
       },
       "results": {
-        "code": "ERROR",
-        "msg": [
-          {
-            "type": "TEXT",
-            "data": "Wed Nov 25 23:58:59 EET 2020\nORCiD cnt:34108075\nWed Nov 25 23:59:03 EET 2020\ns2doi diffs cnt:714744779\nWed Nov 25 23:59:04 EET 2020\norg.apache.spark.SparkException: Job aborted due to stage failure: Task 168 in stage 8.0 failed 1 times, most recent failure: Lost task 168.0 in stage 8.0 (TID 1442, PC192.168.2.5.station, executor driver): java.lang.OutOfMemoryError: Could not allocate native memory: std::bad_alloc: RMM failure at: /usr/local/rapids/include/rmm/mr/device/pool_memory_resource.hpp:167: Maximum pool size exceeded\n\tat ai.rapids.cudf.Rmm.allocInternal(Native Method)\n\tat ai.rapids.cudf.Rmm.alloc(Rmm.java:319)\n\tat ai.rapids.cudf.Rmm.alloc(Rmm.java:308)\n\tat ai.rapids.cudf.DeviceMemoryBuffer.allocate(DeviceMemoryBuffer.java:125)\n\tat ai.rapids.cudf.JCudfSerialization.readTableFrom(JCudfSerialization.java:1477)\n\tat ai.rapids.cudf.JCudfSerialization.readTableFrom(JCudfSerialization.java:1522)\n\tat com.nvidia.spark.rapids.GpuColumnarBatchSerializerInstance$$anon$2$$anon$3.tryReadNext(GpuColumnarBatchSerializer.scala:152)\n\tat com.nvidia.spark.rapids.GpuColumnarBatchSerializerInstance$$anon$2$$anon$3.hasNext(GpuColumnarBatchSerializer.scala:175)\n\tat scala.collection.Iterator$$anon$11.hasNext(Iterator.scala:488)\n\tat scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:458)\n\tat org.apache.spark.util.CompletionIterator.hasNext(CompletionIterator.scala:31)\n\tat org.apache.spark.InterruptibleIterator.hasNext(InterruptibleIterator.scala:37)\n\tat scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:458)\n\tat com.nvidia.spark.rapids.RemoveEmptyBatchIterator.hasNext(GpuCoalesceBatches.scala:125)\n\tat com.nvidia.spark.rapids.AbstractGpuCoalesceIterator.next(GpuCoalesceBatches.scala:281)\n\tat com.nvidia.spark.rapids.AbstractGpuCoalesceIterator.next(GpuCoalesceBatches.scala:148)\n\tat com.nvidia.spark.rapids.GpuColumnarBatchSorter$$anon$1.loadNextBatch(GpuSortExec.scala:141)\n\tat com.nvidia.spark.rapids.GpuColumnarBatchSorter$$anon$1.hasNext(GpuSortExec.scala:188)\n\tat org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage1.gpucolumnartorow_nextBatch_0$(Unknown Source)\n\tat org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage1.processNext(Unknown Source)\n\tat org.apache.spark.sql.execution.BufferedRowIterator.hasNext(BufferedRowIterator.java:43)\n\tat org.apache.spark.sql.execution.WholeStageCodegenExec$$anon$1.hasNext(WholeStageCodegenExec.scala:729)\n\tat org.apache.spark.sql.execution.RowIteratorFromScala.advanceNext(RowIterator.scala:83)\n\tat org.apache.spark.sql.execution.joins.SortMergeFullOuterJoinScanner.advancedLeft(SortMergeJoinExec.scala:1042)\n\tat org.apache.spark.sql.execution.joins.SortMergeFullOuterJoinScanner.\u003cinit\u003e(SortMergeJoinExec.scala:1032)\n\tat org.apache.spark.sql.execution.joins.SortMergeJoinExec.$anonfun$doExecute$1(SortMergeJoinExec.scala:286)\n\tat org.apache.spark.rdd.ZippedPartitionsRDD2.compute(ZippedPartitionsRDD.scala:89)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:349)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:313)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:349)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:313)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:349)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:313)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:349)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:313)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:349)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:313)\n\tat org.apache.spark.shuffle.ShuffleWriteProcessor.write(ShuffleWriteProcessor.scala:59)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:99)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:52)\n\tat org.apache.spark.scheduler.Task.run(Task.scala:127)\n\tat org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$3(Executor.scala:446)\n\tat org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:1377)\n\tat org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:449)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)\n\tat java.base/java.lang.Thread.run(Thread.java:834)\n\nDriver stacktrace:\n  at org.apache.spark.scheduler.DAGScheduler.failJobAndIndependentStages(DAGScheduler.scala:2059)\n  at org.apache.spark.scheduler.DAGScheduler.$anonfun$abortStage$2(DAGScheduler.scala:2008)\n  at org.apache.spark.scheduler.DAGScheduler.$anonfun$abortStage$2$adapted(DAGScheduler.scala:2007)\n  at scala.collection.mutable.ResizableArray.foreach(ResizableArray.scala:62)\n  at scala.collection.mutable.ResizableArray.foreach$(ResizableArray.scala:55)\n  at scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:49)\n  at org.apache.spark.scheduler.DAGScheduler.abortStage(DAGScheduler.scala:2007)\n  at org.apache.spark.scheduler.DAGScheduler.$anonfun$handleTaskSetFailed$1(DAGScheduler.scala:973)\n  at org.apache.spark.scheduler.DAGScheduler.$anonfun$handleTaskSetFailed$1$adapted(DAGScheduler.scala:973)\n  at scala.Option.foreach(Option.scala:407)\n  at org.apache.spark.scheduler.DAGScheduler.handleTaskSetFailed(DAGScheduler.scala:973)\n  at org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.doOnReceive(DAGScheduler.scala:2239)\n  at org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onReceive(DAGScheduler.scala:2188)\n  at org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onReceive(DAGScheduler.scala:2177)\n  at org.apache.spark.util.EventLoop$$anon$1.run(EventLoop.scala:49)\n  at org.apache.spark.scheduler.DAGScheduler.runJob(DAGScheduler.scala:775)\n  at org.apache.spark.SparkContext.runJob(SparkContext.scala:2099)\n  at org.apache.spark.SparkContext.runJob(SparkContext.scala:2120)\n  at org.apache.spark.SparkContext.runJob(SparkContext.scala:2139)\n  at org.apache.spark.SparkContext.runJob(SparkContext.scala:2164)\n  at org.apache.spark.rdd.RDD.$anonfun$collect$1(RDD.scala:1004)\n  at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)\n  at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:112)\n  at org.apache.spark.rdd.RDD.withScope(RDD.scala:388)\n  at org.apache.spark.rdd.RDD.collect(RDD.scala:1003)\n  at org.apache.spark.sql.execution.SparkPlan.executeCollect(SparkPlan.scala:385)\n  at org.apache.spark.sql.Dataset.$anonfun$count$1(Dataset.scala:2981)\n  at org.apache.spark.sql.Dataset.$anonfun$count$1$adapted(Dataset.scala:2980)\n  at org.apache.spark.sql.Dataset.$anonfun$withAction$1(Dataset.scala:3618)\n  at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId$5(SQLExecution.scala:100)\n  at org.apache.spark.sql.execution.SQLExecution$.withSQLConfPropagated(SQLExecution.scala:160)\n  at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId$1(SQLExecution.scala:87)\n  at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:764)\n  at org.apache.spark.sql.execution.SQLExecution$.withNewExecutionId(SQLExecution.scala:64)\n  at org.apache.spark.sql.Dataset.withAction(Dataset.scala:3616)\n  at org.apache.spark.sql.Dataset.count(Dataset.scala:2980)\n  ... 44 elided\nCaused by: java.lang.OutOfMemoryError: Could not allocate native memory: std::bad_alloc: RMM failure at: /usr/local/rapids/include/rmm/mr/device/pool_memory_resource.hpp:167: Maximum pool size exceeded\n  at ai.rapids.cudf.Rmm.allocInternal(Native Method)\n  at ai.rapids.cudf.Rmm.alloc(Rmm.java:319)\n  at ai.rapids.cudf.Rmm.alloc(Rmm.java:308)\n  at ai.rapids.cudf.DeviceMemoryBuffer.allocate(DeviceMemoryBuffer.java:125)\n  at ai.rapids.cudf.JCudfSerialization.readTableFrom(JCudfSerialization.java:1477)\n  at ai.rapids.cudf.JCudfSerialization.readTableFrom(JCudfSerialization.java:1522)\n  at com.nvidia.spark.rapids.GpuColumnarBatchSerializerInstance$$anon$2$$anon$3.tryReadNext(GpuColumnarBatchSerializer.scala:152)\n  at com.nvidia.spark.rapids.GpuColumnarBatchSerializerInstance$$anon$2$$anon$3.hasNext(GpuColumnarBatchSerializer.scala:175)\n  at scala.collection.Iterator$$anon$11.hasNext(Iterator.scala:488)\n  at scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:458)\n  at org.apache.spark.util.CompletionIterator.hasNext(CompletionIterator.scala:31)\n  at org.apache.spark.InterruptibleIterator.hasNext(InterruptibleIterator.scala:37)\n  at scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:458)\n  at com.nvidia.spark.rapids.RemoveEmptyBatchIterator.hasNext(GpuCoalesceBatches.scala:125)\n  at com.nvidia.spark.rapids.AbstractGpuCoalesceIterator.next(GpuCoalesceBatches.scala:281)\n  at com.nvidia.spark.rapids.AbstractGpuCoalesceIterator.next(GpuCoalesceBatches.scala:148)\n  at com.nvidia.spark.rapids.GpuColumnarBatchSorter$$anon$1.loadNextBatch(GpuSortExec.scala:141)\n  at com.nvidia.spark.rapids.GpuColumnarBatchSorter$$anon$1.hasNext(GpuSortExec.scala:188)\n  at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage1.gpucolumnartorow_nextBatch_0$(Unknown Source)\n  at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage1.processNext(Unknown Source)\n  at org.apache.spark.sql.execution.BufferedRowIterator.hasNext(BufferedRowIterator.java:43)\n  at org.apache.spark.sql.execution.WholeStageCodegenExec$$anon$1.hasNext(WholeStageCodegenExec.scala:729)\n  at org.apache.spark.sql.execution.RowIteratorFromScala.advanceNext(RowIterator.scala:83)\n  at org.apache.spark.sql.execution.joins.SortMergeFullOuterJoinScanner.advancedLeft(SortMergeJoinExec.scala:1042)\n  at org.apache.spark.sql.execution.joins.SortMergeFullOuterJoinScanner.\u003cinit\u003e(SortMergeJoinExec.scala:1032)\n  at org.apache.spark.sql.execution.joins.SortMergeJoinExec.$anonfun$doExecute$1(SortMergeJoinExec.scala:286)\n  at org.apache.spark.rdd.ZippedPartitionsRDD2.compute(ZippedPartitionsRDD.scala:89)\n  at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:349)\n  at org.apache.spark.rdd.RDD.iterator(RDD.scala:313)\n  at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n  at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:349)\n  at org.apache.spark.rdd.RDD.iterator(RDD.scala:313)\n  at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n  at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:349)\n  at org.apache.spark.rdd.RDD.iterator(RDD.scala:313)\n  at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n  at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:349)\n  at org.apache.spark.rdd.RDD.iterator(RDD.scala:313)\n  at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n  at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:349)\n  at org.apache.spark.rdd.RDD.iterator(RDD.scala:313)\n  at org.apache.spark.shuffle.ShuffleWriteProcessor.write(ShuffleWriteProcessor.scala:59)\n  at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:99)\n  at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:52)\n  at org.apache.spark.scheduler.Task.run(Task.scala:127)\n  at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$3(Executor.scala:446)\n  at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:1377)\n  at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:449)\n  ... 3 more\n"
-          }
-        ]
-      },
-      "apps": [],
-      "runtimeInfos": {
-        "jobUrl": {
-          "propertyName": "jobUrl",
-          "label": "SPARK JOB",
-          "tooltip": "View in Spark web UI",
-          "group": "spark",
-          "values": [
-            {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d0"
-            },
-            {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d1"
-            },
-            {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d2"
-            },
-            {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d3"
-            },
-            {
-              "jobUrl": "http://PC192.168.2.5.station:4040/jobs/job?id\u003d4"
-            }
-          ],
-          "interpreterSettingId": "spark"
-        }
-      },
-      "progressUpdateIntervalMs": 500,
-      "jobName": "paragraph_1606328166907_1759603769",
-      "id": "paragraph_1606328166907_1759603769",
-      "dateCreated": "2020-11-25 20:16:06.907",
-      "dateStarted": "2020-11-25 23:58:59.748",
-      "dateFinished": "2020-11-26 00:29:43.883",
-      "status": "ERROR"
-    },
-    {
-      "title": "Explode Affiliations \u0026 add seqNum ",
-      "text": "%spark\n\nimport org.apache.spark.sql.functions.countDistinct;\nimport org.apache.spark.storage.StorageLevel;\n\nval MAG_HOME \u003d \"/media/datadisk/Datasets/MAG/20201109/mag\"\nval paperAuthorsAffTsvFilename \u003d \"PaperAuthorAffiliations.txt\"\n\n\nval paperAuthorAffSchema \u003d new StructType().\n                add(\"paperId\", LongType, false).\n                add(\"authorId\", LongType, false).                \n                add(\"affiliationId\", LongType, true).\n                add(\"authorSequenceNumber\",IntegerType, true).\n                add(\"originalAuthor\", StringType, true).\n                add(\"originalAffiliation\", StringType, true)\n\n                \nval paperAuthorAffdf \u003d spark.read.options(Map(\"sep\"-\u003e\"\\t\", \"header\"-\u003e \"false\")).\n                schema(paperAuthorAffSchema).\n                csv(s\"file://$MAG_HOME/$paperAuthorsAffTsvFilename\")\n                .persist(StorageLevel.DISK_ONLY)\n\n\nprintln(\"paperAuthorAffdf cnt:\" + paperAuthorAffdf.count())\nval paperIdsdf \u003d paperAuthorAffdf.select(countDistinct(\"paperId\"))\npaperIdsdf.show(false)\nval authorIdsdf \u003d paperAuthorAffdf.select(countDistinct(\"authorId\")) \nauthorIdsdf.show(false)\n\n\n\nval S2_MAG_df \u003d spark.read.parquet(\"/media/datadisk/Datasets/MAG_S2/S2_MAG_df.parquet\")\n\nprintln(\"paperAuthorAffdf cnt:\" + S2_MAG_df.count())\nval paperIdsdf2 \u003d S2_MAG_df.select(countDistinct(\"MAGpaperId\")) \npaperIdsdf2.show(false)\nval authorIdsdf2 \u003d S2_MAG_df.select(countDistinct(\"MAGauthorId\")) \nauthorIdsdf2.show(false)\n\n\n\nval PKGinitdf \u003d paperAuthorAffdf\n                   .join(S2_MAG_df, paperAuthorAffdf(\"paperId\") \u003d\u003d\u003d S2_MAG_df(\"MAGpaperId\")  \u0026\u0026  paperAuthorAffdf(\"authorId\")\u003d\u003d\u003dS2_MAG_df(\"MAGauthorId\") , \"inner\")                  \n                   .select(S2_MAG_df(\"MAGpaperId\"),   S2_MAG_df(\"MAGauthorId\"), paperAuthorAffdf(\"affiliationId\"), paperAuthorAffdf(\"authorSequenceNumber\"), \n                          S2_MAG_df(\"S2authorId\"),S2_MAG_df(\"S2paperId\"))\n                          \nPKGinitdf.write.parquet(\"/media/datadisk/Datasets/MAG_S2/PKGinitdf.parquet\")                    ",
-      "user": "anonymous",
-      "dateUpdated": "2020-11-22 23:26:32.618",
-      "config": {
-        "colWidth": 12.0,
-        "fontSize": 9.0,
-        "enabled": true,
-        "results": {},
-        "editorSetting": {
-          "language": "scala",
-          "editOnDblClick": false,
-          "completionKey": "TAB",
-          "completionSupport": true
-        },
-        "editorMode": "ace/mode/scala",
-        "title": true
-      },
-      "settings": {
-        "params": {},
-        "forms": {}
-      },
-      "results": {
         "code": "SUCCESS",
         "msg": [
           {
             "type": "TEXT",
-            "data": "paperAuthorAffdf cnt:664059589\n+-----------------------+\n|count(DISTINCT paperId)|\n+-----------------------+\n|244449978              |\n+-----------------------+\n\n+------------------------+\n|count(DISTINCT authorId)|\n+------------------------+\n|259658718               |\n+------------------------+\n\npaperAuthorAffdf cnt:714744779\n+--------------------------+\n|count(DISTINCT MAGpaperId)|\n+--------------------------+\n|243110801                 |\n+--------------------------+\n\n+---------------------------+\n|count(DISTINCT MAGauthorId)|\n+---------------------------+\n|258127231                  |\n+---------------------------+\n\nimport org.apache.spark.sql.functions.countDistinct\nimport org.apache.spark.storage.StorageLevel\n\u001b[1m\u001b[34mMAG_HOME\u001b[0m: \u001b[1m\u001b[32mString\u001b[0m \u003d /media/datadisk/Datasets/MAG/20201109/mag\n\u001b[1m\u001b[34mpaperAuthorsAffTsvFilename\u001b[0m: \u001b[1m\u001b[32mString\u001b[0m \u003d PaperAuthorAffiliations.txt\n\u001b[1m\u001b[34mpaperAuthorAffSchema\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.types.StructType\u001b[0m \u003d StructType(StructField(paperId,LongType,false), StructField(authorId,LongType,false), StructField(affiliationId,LongType,true), StructField(authorSequenceNumber,IntegerType,true), StructField(originalAuthor,StringType,true), StructField(originalAffiliation,StringType,true))\n\u001b[1m\u001b[34mpaperAuthorAffdf\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m \u003d [paperId: bigint, authorId: bigint ... 4 more fields]\n\u001b[1m...\n"
+            "data": "import org.apache.spark.sql.types._\nimport org.apache.commons.lang.StringUtils\nimport java.lang.Integer.parseInt\nimport org.slf4j.Logger\nimport org.slf4j.LoggerFactory\nimport org.apache.spark.sql.functions.concat_ws\nimport org.apache.spark.sql.functions.countDistinct\nimport org.apache.commons.lang3.StringUtils\nimport java.text.Normalizer\nimport java.util.Locale\nimport org.apache.spark.storage.StorageLevel\n\u001b[1m\u001b[34mPKG_init_df\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m \u003d [MAGpaperId: bigint, MAGauthorId: bigint ... 5 more fields]\n"
           }
         ]
       },
@@ -851,39 +995,21 @@
           "group": "spark",
           "values": [
             {
-              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d12"
+              "jobUrl": "http://192.168.2.7:4040/jobs/job?id\u003d0"
             },
             {
-              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d13"
-            },
-            {
-              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d14"
-            },
-            {
-              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d15"
-            },
-            {
-              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d16"
-            },
-            {
-              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d17"
-            },
-            {
-              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d18"
-            },
-            {
-              "jobUrl": "http://192.168.2.5:4040/jobs/job?id\u003d19"
+              "jobUrl": "http://192.168.2.7:4040/jobs/job?id\u003d1"
             }
           ],
           "interpreterSettingId": "spark"
         }
       },
       "progressUpdateIntervalMs": 500,
-      "jobName": "paragraph_1606036250517_213251448",
-      "id": "paragraph_1606036250517_213251448",
-      "dateCreated": "2020-11-22 11:10:50.517",
-      "dateStarted": "2020-11-22 16:04:25.022",
-      "dateFinished": "2020-11-22 17:25:06.696",
+      "jobName": "paragraph_1609765043598_2145293281",
+      "id": "paragraph_1609765043598_2145293281",
+      "dateCreated": "2021-01-04 14:57:23.598",
+      "dateStarted": "2021-01-04 15:02:00.998",
+      "dateFinished": "2021-01-04 15:09:49.178",
       "status": "FINISHED"
     },
     {
